@@ -16,6 +16,7 @@ import React, { useState, useEffect } from 'react';
 import { useNetwork } from 'wagmi';
 import CryptoPieChart from '../templates/home/CryptoPieChart';
 import PortfolioPerformanceChart from '../templates/home/PortfolioPerformanceChart';
+import { Streams } from '@web3uikit/icons';
 
 const Home = () => {
   const hoverTrColor = useColorModeValue('gray.100', 'gray.700');
@@ -103,4 +104,4 @@ const Home = () => {
   );
 };
 
-export default Stream;
+export default Streams;

@@ -23,7 +23,7 @@ import { extendTheme } from '@chakra-ui/react';
 import { publicProvider } from 'wagmi/providers/public';
 import { SessionProvider } from 'next-auth/react';
 import type { AppProps } from 'next/app';
-import Sidebar from 'components/elements/navigation/SideBar/sidebar';
+import { Route , Routes } from 'react-router-dom';
 
 const { provider, webSocketProvider } = configureChains(
   [

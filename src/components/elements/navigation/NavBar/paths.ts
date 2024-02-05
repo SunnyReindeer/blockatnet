@@ -1,13 +1,10 @@
 import { ISubNav } from '../SubNav/SubNav';
+import { Stream } from 'components/Streams';
+import { Track } from 'components/Track';
 
 const NAV_LINKS: ISubNav[] = [
-  { label: 'Home', href: '/' },
   {
-    label: 'Transactions',
-    href: '/transactions',
-  },
-  {
-    label: 'Transfers',
+    label: 'Home',
     href: '/transfers',
     children: [
       {
@@ -22,12 +19,12 @@ const NAV_LINKS: ISubNav[] = [
         href: '/transfers/nft',
         logo: 'lazyNft',
       },
-    ],
-  },
-  {
-    label: 'Balances',
-    href: '/balances',
-    children: [
+      {
+        label: 'Transactions',
+        subLabel: 'Get your ERC721 an ERC1155 transfers',
+        href: '/transactions',
+        logo: 'lazyNft',
+      },
       {
         label: 'ERC20',
         subLabel: 'Get your ERC20 balances',
@@ -41,6 +38,16 @@ const NAV_LINKS: ISubNav[] = [
         logo: 'pack',
       },
     ],
+  },
+  { label: 'Alert', href: '/components/Alert' ,},
+  {
+    label: 'Track',
+    href: '/components/Track',
+  },
+
+  {
+    label: 'Stream',
+    href: '/components/Stream',
   },
 ];
 

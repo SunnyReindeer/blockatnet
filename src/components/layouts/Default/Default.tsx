@@ -2,7 +2,9 @@ import { FC, ReactNode } from 'react';
 import { Container } from '@chakra-ui/react';
 import { Footer, Header } from 'components/modules';
 import Head from 'next/head';
-import Sidebar from 'components/elements/navigation/SideBar/sidebar';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { Track } from 'components/Track';
+import { Stream } from 'components/Streams';
 
 const Default: FC<{ children: ReactNode; pageName: string }> = ({ children, pageName }) => (
   <>
@@ -14,12 +16,11 @@ const Default: FC<{ children: ReactNode; pageName: string }> = ({ children, page
     <Header />
     
 
-    <div style={{ display: 'flex' }}>
-        <Sidebar />
+    <Container centerContent>
         {children}
-      </div>
+        </Container>
+      <Footer></Footer>
 
-    <Footer />
   </>
 );
 
