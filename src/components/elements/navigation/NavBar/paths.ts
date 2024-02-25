@@ -8,6 +8,12 @@ const NAV_LINKS: ISubNav[] = [
     href: '/transfers',
     children: [
       {
+        label: 'Dashboard',
+        subLabel: 'Dashboard',
+        href: '../',
+        logo: 'token',
+      },
+      {
         label: 'ERC20',
         subLabel: 'Get your ERC20 transfers',
         href: '/transfers/erc20',

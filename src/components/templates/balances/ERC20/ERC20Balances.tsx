@@ -1,25 +1,24 @@
+import React, { useEffect, useState } from 'react';
 import {
-  TableContainer,
+  Avatar,
+  Box,
+  Heading,
+  HStack,
   Table,
-  Thead,
-  Tr,
-  Th,
+  TableContainer,
   Tbody,
   Td,
-  Tfoot,
-  VStack,
-  Heading,
-  Box,
   Text,
-  Avatar,
-  HStack,
+  Th,
+  Thead,
+  Tr,
+  VStack,
   useColorModeValue,
 } from '@chakra-ui/react';
 import { useEvmWalletTokenBalances } from '@moralisweb3/next';
 import { useSession } from 'next-auth/react';
-import { useEffect } from 'react';
-import { getEllipsisTxt } from 'utils/format';
 import { useNetwork } from 'wagmi';
+import { getEllipsisTxt } from 'utils/format';
 
 const ERC20Balances = () => {
   const hoverTrColor = useColorModeValue('gray.100', 'gray.700');
@@ -29,8 +28,47 @@ const ERC20Balances = () => {
     address: data?.user?.address,
     chain: chain?.id,
   });
+  const [tokenPrices, setTokenPrices] = useState({});
+  const [liquidityIssues, setLiquidityIssues] = useState({});
 
-  useEffect(() => console.log('tokenBalances: ', tokenBalances), [tokenBalances]);
+  useEffect(() => {
+    const fetchTokenPrices = async () => {
+      const prices = {};
+      const liquidityErrors = {};
+      for (const { token } of tokenBalances ?? []) {
+        const address = token?.contractAddress.checksum;
+        if (!address) continue; 
+        try {
+          const response = await fetch(`https://deep-index.moralis.io/api/v2/erc20/${address}/price?chain=eth`, {
+            headers: {
+              'X-API-Key': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImQ3ZDY2NWQzLTIyNDYtNDQ3Ni1iYmE2LTdkOWViZmI5OTkzYyIsIm9yZ0lkIjoiMzY0ODg4IiwidXNlcklkIjoiMzc1MDEwIiwidHlwZUlkIjoiMDNmYTExNTMtZmYzOC00ZjU3LTg4YTItMTk4MGVlMWQwZWUzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MDAzMTUzMTAsImV4cCI6NDg1NjA3NTMxMH0.6heL_EFvR_PN7kN0lsL9g1kTzpK12q0rxpAn0JZuG_8',
+              'Accept': 'application/json',
+            },
+          });          
+        
+          if (!response.ok) {
+            throw new Error(`Error fetching price: ${response.status}`);
+          }
+        
+          const data = await response.json();
+          prices[address] = data.usdPrice; 
+        } catch (error) {
+          console.error('Error fetching price for token:', token?.symbol, error);
+          if (data.message && data.message.includes('No pools found with enough liquidity')) {
+            liquidityErrors[address] = 'No pools found with enough liquidity to calculate the price';
+          } else {
+            prices[address] = data.usdPrice || 'Price information unavailable';
+          }
+      }
+    }
+      setTokenPrices(prices);
+      setLiquidityIssues(liquidityErrors);
+    };
+
+    if (tokenBalances?.length) {
+      fetchTokenPrices();
+    }
+  }, [tokenBalances, chain?.id]);
 
   return (
     <>
@@ -45,11 +83,12 @@ const ERC20Balances = () => {
                 <Tr>
                   <Th>Token</Th>
                   <Th>Value</Th>
+                  <Th>Price (USD)</Th>
                   <Th isNumeric>Address</Th>
                 </Tr>
               </Thead>
               <Tbody>
-                {tokenBalances?.map(({ token, value }, key) => (
+                {tokenBalances.map(({ token, value }, key) => (
                   <Tr key={`${token?.symbol}-${key}-tr`} _hover={{ bgColor: hoverTrColor }} cursor="pointer">
                     <Td>
                       <HStack>
@@ -63,17 +102,19 @@ const ERC20Balances = () => {
                       </HStack>
                     </Td>
                     <Td>{value}</Td>
+                    <Td>
+                      {liquidityIssues[token?.contractAddress.checksum] ? (
+                        <Text color="red.500">{liquidityIssues[token?.contractAddress.checksum]}</Text>
+                      ) : tokenPrices[token?.contractAddress.checksum] ? (
+                        `$${tokenPrices[token?.contractAddress.checksum]}`
+                      ) : (
+                        'Price information unavailable'
+                      )}
+                    </Td>
                     <Td isNumeric>{getEllipsisTxt(token?.contractAddress.checksum)}</Td>
                   </Tr>
                 ))}
               </Tbody>
-              <Tfoot>
-                <Tr>
-                  <Th>Token</Th>
-                  <Th>Value</Th>
-                  <Th isNumeric>Address</Th>
-                </Tr>
-              </Tfoot>
             </Table>
           </TableContainer>
         </Box>
