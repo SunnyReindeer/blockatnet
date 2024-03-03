@@ -33,6 +33,8 @@ const Home = () => {
   const chartLabels = tokenBalances?.map(token => token.token.symbol || 'Unknown Token');
   const chartData = tokenBalances?.map(token => parseFloat(token.value));
 
+  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjgxZGRhMTUyLTJjNjItNDM3MS1hMWYxLThiNjBkNmFmOGY0NCIsIm9yZ0lkIjoiMzY1MzUyIiwidXNlcklkIjoiMzc1NDg4IiwidHlwZUlkIjoiNDVhYTUzYTItMTZiYy00ZTUyLThhYzQtN2Y1MDMxZDU2NDE4IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MDA2MzE1MTAsImV4cCI6NDg1NjM5MTUxMH0.CZoF2bzrUxc5Lz1EynGjFPnG5Cxy2MXj4MSpFr6RAlQ'; 
+
   // Calculate New Worth
   const fetchNetWorth = async () => {
     const address = data?.user?.address;
@@ -42,7 +44,7 @@ const Home = () => {
     try {
       const response = await fetch(`https://deep-index.moralis.io/api/v2/${address}/balance?chain=${chainId}&to_block=latest`, {
         headers: {
-          'X-API-Key': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjgxZGRhMTUyLTJjNjItNDM3MS1hMWYxLThiNjBkNmFmOGY0NCIsIm9yZ0lkIjoiMzY1MzUyIiwidXNlcklkIjoiMzc1NDg4IiwidHlwZUlkIjoiNDVhYTUzYTItMTZiYy00ZTUyLThhYzQtN2Y1MDMxZDU2NDE4IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MDA2MzE1MTAsImV4cCI6NDg1NjM5MTUxMH0.CZoF2bzrUxc5Lz1EynGjFPnG5Cxy2MXj4MSpFr6RAlQ',
+          'X-API-Key': MORALIS_API_KEY,
           'Accept': 'application/json',
         },
       });
@@ -56,12 +58,28 @@ const Home = () => {
     }
   };
 
+ 
   const fetchTopTokens = async () => {
-    const response = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=5&page=1');
-    const data = await response.json();
-    setTokens(data);
+    console.log("Fetching top tokens...");
+    const url = `https://deep-index.moralis.io/api/v2/erc20/marketcap?chain=eth&limit=5`;
+    const options = {
+      method: 'GET',
+      headers: {
+        'X-API-Key': MORALIS_API_KEY,
+        'Accept': 'application/json',
+      },
+    };
+  
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      console.log("Fetched top tokens:", data);
+      setTokens(data); // Make sure this is correct. It should match your state's structure
+    } catch (error) {
+      console.error('Error fetching top ERC20 tokens:', error);
+    }
   };
-  fetchTopTokens();
 
   const fetchPrices = async () => {
     try {
@@ -87,6 +105,7 @@ const Home = () => {
   useEffect(() => {
     fetchPrices();
     fetchNetWorth();
+    fetchTopTokens();
     const intervalId = setInterval(fetchPrices, 180000); // Fetch prices every 180 seconds
 
 
@@ -148,8 +167,8 @@ const Home = () => {
               <StatLabel>Top 5 Token</StatLabel>
               <StatHelpText>
                 <ul>
-                  {tokens.map((token) => (
-                    <li key={token.id} onClick={() => handleTokenClick(token.symbol)}>
+                  {tokens.map((token, index) => (
+                    <li key={index} onClick={() => handleTokenClick(token.symbol)}>
                       {token.name} - {token.symbol.toUpperCase()}
                     </li>
                   ))}
