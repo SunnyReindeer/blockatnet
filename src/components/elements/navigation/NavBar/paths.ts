@@ -45,15 +45,9 @@ const NAV_LINKS: ISubNav[] = [
       },
     ],
   },
-  { label: 'Alert', href: '/components/Alert' ,},
   {
     label: 'Track',
     href: '/components/Track',
-  },
-
-  {
-    label: 'Stream',
-    href: '/components/Stream',
   },
 ];
 
