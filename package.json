@@ -1,8 +1,7 @@
 {
-  "name": "ethereum-boilerplate",
+  "name": "blockatnet",
   "version": "2.0.0",
   "private": true,
-  "homepage": "https://eth-boilerplate.vercel.app/",
   "scripts": {
     "format": "prettier . \"**/*.+(js|ts|json)\" --write --ignore-path .gitignore",
     "format:check": "prettier \"**/*.+(js|ts|json)\" --check --ignore-path .gitignore",
@@ -10,6 +9,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "type": "module",
     "test:e2e": "start-server-and-test dev http://localhost:3000 test:cypress",
     "test:cypress": "cypress run --browser chrome --headless"
   },
@@ -31,6 +31,7 @@
     "moralis": "^2.18.4",
     "next": "^13.3.1",
     "next-auth": "^4.20.1",
+    "node-fetch": "^3.3.2",
     "react": "^18.2.0",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.2.0",

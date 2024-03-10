@@ -1,6 +1,4 @@
 import { ISubNav } from '../SubNav/SubNav';
-import { Stream } from 'components/Streams';
-import { Track } from 'components/Track';
 
 const NAV_LINKS: ISubNav[] = [
   {
@@ -11,7 +9,7 @@ const NAV_LINKS: ISubNav[] = [
         label: 'Dashboard',
         subLabel: 'Dashboard',
         href: '../',
-        logo: 'token',
+        logo: 'servers',
       },
       {
         label: 'ERC20',
@@ -27,7 +25,7 @@ const NAV_LINKS: ISubNav[] = [
       },
       {
         label: 'Transactions',
-        subLabel: 'Get your ERC721 an ERC1155 transfers',
+        subLabel: 'Get your transactions',
         href: '/transactions',
         logo: 'lazyNft',
       },
@@ -39,7 +37,7 @@ const NAV_LINKS: ISubNav[] = [
       },
       {
         label: 'NFT',
-        subLabel: 'Get your ERC721 an ERC1155 balances',
+        subLabel: 'Get your NFT balances',
         href: '/balances/nft',
         logo: 'pack',
       },

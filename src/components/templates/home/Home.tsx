@@ -8,19 +8,21 @@ import {
   Flex,
   Box,
 } from "@chakra-ui/react";
-import { useColorModeValue } from '@chakra-ui/react';
+import { useColorModeValue, Button, ButtonGroup } from '@chakra-ui/react';
 import { useEvmWalletTokenBalances } from '@moralisweb3/next';
 import { useSession } from 'next-auth/react';
 import { useNetwork } from 'wagmi';
 import CryptoPieChart from './CryptoPieChart';
 import PortfolioPerformanceChart from './PortfolioPerformanceChart';
-import TopCoins from './TopCoins';
+
 
 const Home = () => {
   const hoverTrColor = useColorModeValue('gray.100', 'gray.700');
   const { data } = useSession();
   const { chain } = useNetwork();
   const [netWorth, setNetWorth] = useState(null);
+  const [tokens, setTokens] = useState({ gainers: [], losers: [] });
+  const [showGainers, setShowGainers] = useState(true);
   const { data: tokenBalances } = useEvmWalletTokenBalances({
     address: data?.user?.address,
     chain: chain?.id,
@@ -33,35 +35,14 @@ const Home = () => {
   const chartLabels = tokenBalances?.map(token => token.token.symbol || 'Unknown Token');
   const chartData = tokenBalances?.map(token => parseFloat(token.value));
 
-  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjgxZGRhMTUyLTJjNjItNDM3MS1hMWYxLThiNjBkNmFmOGY0NCIsIm9yZ0lkIjoiMzY1MzUyIiwidXNlcklkIjoiMzc1NDg4IiwidHlwZUlkIjoiNDVhYTUzYTItMTZiYy00ZTUyLThhYzQtN2Y1MDMxZDU2NDE4IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MDA2MzE1MTAsImV4cCI6NDg1NjM5MTUxMH0.CZoF2bzrUxc5Lz1EynGjFPnG5Cxy2MXj4MSpFr6RAlQ'; 
+  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjgxZGRhMTUyLTJjNjItNDM3MS1hMWYxLThiNjBkNmFmOGY0NCIsIm9yZ0lkIjoiMzY1MzUyIiwidXNlcklkIjoiMzc1NDg4IiwidHlwZUlkIjoiNDVhYTUzYTItMTZiYy00ZTUyLThhYzQtN2Y1MDMxZDU2NDE4IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MDA2MzE1MTAsImV4cCI6NDg1NjM5MTUxMH0.CZoF2bzrUxc5Lz1EynGjFPnG5Cxy2MXj4MSpFr6RAlQ';
 
   // Calculate New Worth
   const fetchNetWorth = async () => {
     const address = data?.user?.address;
-    const chainId = chain?.id || 'eth'; // Default to Ethereum if chain ID is not available
     if (!address) return;
 
-    try {
-      const response = await fetch(`https://deep-index.moralis.io/api/v2/${address}/balance?chain=${chainId}&to_block=latest`, {
-        headers: {
-          'X-API-Key': MORALIS_API_KEY,
-          'Accept': 'application/json',
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      setNetWorth(data.balance); // Update your state variable accordingly
-    } catch (error) {
-      console.error("Failed to fetch net worth:", error);
-    }
-  };
-
- 
-  const fetchTopTokens = async () => {
-    console.log("Fetching top tokens...");
-    const url = `https://deep-index.moralis.io/api/v2/erc20/marketcap?chain=eth&limit=5`;
+    const url = `https://deep-index.moralis.io/api/v2.2/wallets/${address}/net-worth?exclude_spam=true&exclude_unverified_contracts=true`;
     const options = {
       method: 'GET',
       headers: {
@@ -69,15 +50,38 @@ const Home = () => {
         'Accept': 'application/json',
       },
     };
-  
+
     try {
       const response = await fetch(url, options);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
-      console.log("Fetched top tokens:", data);
-      setTokens(data); // Make sure this is correct. It should match your state's structure
+      console.log('Net worth data:', data);
+      setNetWorth(data.total_networth_usd);
     } catch (error) {
-      console.error('Error fetching top ERC20 tokens:', error);
+      console.error("Failed to fetch net worth:", error);
+    }
+  };
+
+
+
+  const fetchTopTokens = async () => {
+    const url = 'https://deep-index.moralis.io/api/v2.2/market-data/erc20s/top-movers';
+    const options = {
+      method: 'GET',
+      headers: {
+        'accept': 'application/json',
+        'X-API-Key': MORALIS_API_KEY,
+      },
+    };
+
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      console.log("Fetched top tokens by price change:", data);
+      setTokens({ gainers: data.gainers, losers: data.losers });
+    } catch (error) {
+      console.error('Error fetching top tokens by price change:', error);
     }
   };
 
@@ -93,13 +97,6 @@ const Home = () => {
     } catch (error) {
       console.error('Error fetching cryptocurrency prices:', error);
     }
-  };
-
-  const [tokens, setTokens] = useState([]);
-  const [selectedTokenSymbol, setSelectedTokenSymbol] = useState('');
-
-  const handleTokenClick = (symbol) => {
-    setSelectedTokenSymbol(symbol);
   };
 
   useEffect(() => {
@@ -154,7 +151,7 @@ const Home = () => {
           {/* Sidebar Content */}
           <Stat>
             <StatLabel>Net Worth</StatLabel>
-            <StatNumber>${netWorth ? (netWorth / 1e18).toFixed(2) : '...'}</StatNumber>
+            <StatNumber>${netWorth ? parseFloat(netWorth).toFixed(2) : '...'}</StatNumber>
             <StatHelpText>As for now</StatHelpText>
           </Stat>
         </Box>
@@ -163,13 +160,17 @@ const Home = () => {
             <CryptoPieChart labels={chartLabels} balances={chartData} />
           </Box>
           <Box flex="1" p={5}>
+            <ButtonGroup gap='4'>
+              <Button onClick={() => setShowGainers(true)}>Show Gainers</Button>
+              <Button onClick={() => setShowGainers(false)}>Show Losers</Button>
+              </ButtonGroup>
             <Stat>
-              <StatLabel>Top 5 Token</StatLabel>
+              <StatLabel>{showGainers ? 'Top Gainers' : 'Top Losers'}</StatLabel>
               <StatHelpText>
                 <ul>
-                  {tokens.map((token, index) => (
-                    <li key={index} onClick={() => handleTokenClick(token.symbol)}>
-                      {token.name} - {token.symbol.toUpperCase()}
+                  {(showGainers ? tokens.gainers : tokens.losers).map((token, index) => (
+                    <li key={index}>
+                      {token.token_name} ({token.token_symbol}): ${parseFloat(token.price_usd).toFixed(2)} - 24h Change: {parseFloat(token.price_24h_percent_change).toFixed(2)}%
                     </li>
                   ))}
                 </ul>
@@ -177,7 +178,6 @@ const Home = () => {
 
             </Stat>
           </Box>
-          <Box><TopCoins symbol={selectedTokenSymbol} /></Box>
         </Flex>
       </Flex>
     </Flex>
