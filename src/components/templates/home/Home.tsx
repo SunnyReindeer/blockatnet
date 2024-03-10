@@ -12,8 +12,9 @@ import {
   Switch,
   Text,
   useToast,
+  Link,
 } from "@chakra-ui/react";
-
+import { ExternalLinkIcon } from '@chakra-ui/icons'
 import { useEvmWalletTokenBalances } from '@moralisweb3/next';
 import { useSession } from 'next-auth/react';
 import { useNetwork } from 'wagmi';
@@ -163,14 +164,12 @@ const Home = () => {
 
       {/* Other Content */}
       <Flex wrap="wrap" >
-      <Box flex="1" p={5}>
-            <CryptoPieChart labels={chartLabels} balances={chartData} />
-          </Box>
-        <Box width="30%" p={5} bg="gray.100">
+        <Box width="50%" p={5} >
           {/* Sidebar Content */}
           <Stat>
             <StatLabel>Bitcoin Price</StatLabel>
             <StatNumber>${bitcoinPrice}</StatNumber>
+            <StatHelpText>As of now</StatHelpText>
             <br></br>
             <StatLabel>Ethereum Price</StatLabel>
             <StatNumber>${ethereumPrice}</StatNumber>
@@ -180,11 +179,8 @@ const Home = () => {
         </Box>
 
 
-        <Box flex="1" p={5}>
-          {/* Main Content - Placeholder or additional content */}
-        </Box>
 
-        <Box width="30%" p={5} bg="gray.100">
+        <Box width="50%" p={5} >
           {/* Sidebar Content */}
           <Stat>
             <StatLabel>Net Worth</StatLabel>
@@ -208,7 +204,8 @@ const Home = () => {
                 <ul>
                   {pageTokens.map((token, index) => ( // Use pageTokens here instead of currentTokens
                     <li key={index}>
-                      {token.token_name} ({token.token_symbol}): ${parseFloat(token.price_usd).toFixed(2)} - 24h Change: {parseFloat(token.price_24h_percent_change).toFixed(2)}%
+                      <img src={token.token_logo} alt={`${token.token_name} Logo`} style={{ width: '20px', height: '20px', marginRight: '10px' }}/>
+                       {token.token_name} ({token.token_symbol}): ${parseFloat(token.price_usd).toFixed(2)} - 24h Change: {parseFloat(token.price_24h_percent_change).toFixed(2)}% <Link href={`https://www.coingecko.com/en/coins/${token?.contract_address}`} isExternal><ExternalLinkIcon mx='2px' /> </Link>
                     </li>
                     
                   ))}

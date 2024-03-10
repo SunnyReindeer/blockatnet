@@ -9,37 +9,37 @@ const NAV_LINKS: ISubNav[] = [
         label: 'Dashboard',
         subLabel: 'Dashboard',
         href: '../',
-        logo: 'servers',
+
       },
       {
-        label: 'ERC20',
+        label: 'ERC20 transfer',
         subLabel: 'Get your ERC20 transfers',
         href: '/transfers/erc20',
-        logo: 'token',
+
       },
       {
-        label: 'NFT',
+        label: 'NFT transfer',
         subLabel: 'Get your ERC721 an ERC1155 transfers',
         href: '/transfers/nft',
-        logo: 'lazyNft',
+
       },
       {
         label: 'Transactions',
-        subLabel: 'Get your transactions',
+        subLabel: 'Get your ERC721 an ERC1155 transfers',
         href: '/transactions',
-        logo: 'lazyNft',
+
       },
       {
-        label: 'ERC20',
+        label: 'ERC20 Balance',
         subLabel: 'Get your ERC20 balances',
         href: '/balances/erc20',
-        logo: 'token',
+
       },
       {
-        label: 'NFT',
-        subLabel: 'Get your NFT balances',
+        label: 'NFT Balance',
+        subLabel: 'Get your ERC721 an ERC1155 balances',
         href: '/balances/nft',
-        logo: 'pack',
+
       },
     ],
   },
