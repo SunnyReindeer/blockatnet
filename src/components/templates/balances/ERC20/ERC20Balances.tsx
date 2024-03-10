@@ -32,8 +32,10 @@ const ERC20Balances = () => {
   });
   const [tokenPrices, setTokenPrices] = useState({});
   const [liquidityIssues, setLiquidityIssues] = useState({});
-
-  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjgxZGRhMTUyLTJjNjItNDM3MS1hMWYxLThiNjBkNmFmOGY0NCIsIm9yZ0lkIjoiMzY1MzUyIiwidXNlcklkIjoiMzc1NDg4IiwidHlwZUlkIjoiNDVhYTUzYTItMTZiYy00ZTUyLThhYzQtN2Y1MDMxZDU2NDE4IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MDA2MzE1MTAsImV4cCI6NDg1NjM5MTUxMH0.CZoF2bzrUxc5Lz1EynGjFPnG5Cxy2MXj4MSpFr6RAlQ'; 
+  const formatNumber = (number) => {
+    return new Intl.NumberFormat('en-US', { maximumFractionDigits: 6, notation: "compact" }).format(number);
+  };
+  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjdmYzQyYWI2LTY3NWUtNDRlZC1hZjNlLWY0ZTA4YzJmZTY4YSIsIm9yZ0lkIjoiMzgyMTE1IiwidXNlcklkIjoiMzkyNjMxIiwidHlwZUlkIjoiOThiODFlYjAtMDJjOS00YjlmLWFlMDAtMGE0OTMwYTQ0Nzg2IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MTAwODQzMTYsImV4cCI6NDg2NTg0NDMxNn0.2EXsAp_rjGC42FAagRk8Abpz1n7jJ9kpPlQWpGYBuFg';
 
   useEffect(() => {
     const fetchTokenPrices = async () => {
@@ -107,7 +109,7 @@ const ERC20Balances = () => {
                       </HStack>
                     </Td>
                     <Td>{value * tokenPrices[token?.contractAddress.checksum]}</Td>
-                    <Td>{value}</Td>
+                    <Td>{formatNumber(value)}</Td>
                     <Td>
                       {liquidityIssues[token?.contractAddress.checksum] ? (
                         <Text color="red.500">{liquidityIssues[token?.contractAddress.checksum]}</Text>

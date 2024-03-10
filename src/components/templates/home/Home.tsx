@@ -7,8 +7,13 @@ import {
   StatHelpText,
   Flex,
   Box,
+  useColorModeValue,
+  Button,
+  Switch,
+  Text,
+  useToast,
 } from "@chakra-ui/react";
-import { useColorModeValue, Button, ButtonGroup } from '@chakra-ui/react';
+
 import { useEvmWalletTokenBalances } from '@moralisweb3/next';
 import { useSession } from 'next-auth/react';
 import { useNetwork } from 'wagmi';
@@ -16,13 +21,20 @@ import CryptoPieChart from './CryptoPieChart';
 import PortfolioPerformanceChart from './PortfolioPerformanceChart';
 
 
+
 const Home = () => {
   const hoverTrColor = useColorModeValue('gray.100', 'gray.700');
   const { data } = useSession();
   const { chain } = useNetwork();
   const [netWorth, setNetWorth] = useState(null);
-  const [tokens, setTokens] = useState({ gainers: [], losers: [] });
+  const [tokens, setTokens] = useState([]);
+  const toast = useToast();
   const [showGainers, setShowGainers] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const tokensPerPage = 5; // Display 5 tokens per page
+  const [pageTokens, setPageTokens] = useState([]); // To store current page tokens
+  const [totalPages, setTotalPages] = useState(0);
+
   const { data: tokenBalances } = useEvmWalletTokenBalances({
     address: data?.user?.address,
     chain: chain?.id,
@@ -35,7 +47,7 @@ const Home = () => {
   const chartLabels = tokenBalances?.map(token => token.token.symbol || 'Unknown Token');
   const chartData = tokenBalances?.map(token => parseFloat(token.value));
 
-  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjgxZGRhMTUyLTJjNjItNDM3MS1hMWYxLThiNjBkNmFmOGY0NCIsIm9yZ0lkIjoiMzY1MzUyIiwidXNlcklkIjoiMzc1NDg4IiwidHlwZUlkIjoiNDVhYTUzYTItMTZiYy00ZTUyLThhYzQtN2Y1MDMxZDU2NDE4IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MDA2MzE1MTAsImV4cCI6NDg1NjM5MTUxMH0.CZoF2bzrUxc5Lz1EynGjFPnG5Cxy2MXj4MSpFr6RAlQ';
+  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImQ3ZDY2NWQzLTIyNDYtNDQ3Ni1iYmE2LTdkOWViZmI5OTkzYyIsIm9yZ0lkIjoiMzY0ODg4IiwidXNlcklkIjoiMzc1MDEwIiwidHlwZUlkIjoiMDNmYTExNTMtZmYzOC00ZjU3LTg4YTItMTk4MGVlMWQwZWUzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MDAzMTUzMTAsImV4cCI6NDg1NjA3NTMxMH0.6heL_EFvR_PN7kN0lsL9g1kTzpK12q0rxpAn0JZuG_8';
 
   // Calculate New Worth
   const fetchNetWorth = async () => {
@@ -63,7 +75,6 @@ const Home = () => {
   };
 
 
-
   const fetchTopTokens = async () => {
     const url = 'https://deep-index.moralis.io/api/v2.2/market-data/erc20s/top-movers';
     const options = {
@@ -77,12 +88,38 @@ const Home = () => {
     try {
       const response = await fetch(url, options);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const data = await response.json();
-      console.log("Fetched top tokens by price change:", data);
-      setTokens({ gainers: data.gainers, losers: data.losers });
+      const jsonResponse = await response.json();
+      const movers = showGainers ? jsonResponse.gainers : jsonResponse.losers;
+      setTokens(movers); // Assuming movers is an array
+      setTotalPages(Math.ceil(movers.length / tokensPerPage));
+      setPageTokens(movers.slice(0, tokensPerPage)); // Initialize with first page
     } catch (error) {
-      console.error('Error fetching top tokens by price change:', error);
+      console.error('Error fetching top ERC20 tokens:', error);
     }
+  };
+
+  const changePage = (newPage) => {
+    if (newPage < 1) {
+      toast({
+        title: "First Page",
+        description: "You are already at the first page.",
+        status: "info",
+        duration: 2000,
+        isClosable: true,
+      });
+      return; // Prevent page change
+    } else if (newPage > totalPages) {
+      toast({
+        title: "Last Page",
+        description: "You are already at the last page.",
+        status: "info",
+        duration: 2000,
+        isClosable: true,
+      });
+      return; // Prevent page change
+    }
+
+    setCurrentPage(newPage);
   };
 
   const fetchPrices = async () => {
@@ -107,41 +144,41 @@ const Home = () => {
 
 
     return () => clearInterval(intervalId);
-  }, [data?.user?.address, chain?.id]);;
+  }, [data?.user?.address, chain?.id, showGainers]);;
 
+  // Pagination Logic
+  useEffect(() => {
+    const indexOfLastToken = currentPage * tokensPerPage;
+    const indexOfFirstToken = indexOfLastToken - tokensPerPage;
+    setPageTokens(tokens.slice(indexOfFirstToken, indexOfLastToken));
+  }, [currentPage, tokens]);
 
 
   return (
     <Flex direction="column">
       {/*Portfolio Performance Chart */}
       <Box flex="1" p={5}>
-        <PortfolioPerformanceChart />
+
       </Box>
 
       {/* Other Content */}
       <Flex wrap="wrap" >
+      <Box flex="1" p={5}>
+            <CryptoPieChart labels={chartLabels} balances={chartData} />
+          </Box>
         <Box width="30%" p={5} bg="gray.100">
           {/* Sidebar Content */}
           <Stat>
             <StatLabel>Bitcoin Price</StatLabel>
             <StatNumber>${bitcoinPrice}</StatNumber>
-            <StatHelpText>As of now</StatHelpText>
-          </Stat>
-
-        </Box>
-
-        <Box flex="1" p={5}>
-          {/* Main Content - Placeholder or additional content */}
-        </Box>
-
-        <Box width="30%" p={5} bg="gray.100">
-          {/* Sidebar Content */}
-          <Stat>
+            <br></br>
             <StatLabel>Ethereum Price</StatLabel>
             <StatNumber>${ethereumPrice}</StatNumber>
             <StatHelpText>As of now</StatHelpText>
           </Stat>
+
         </Box>
+
 
         <Box flex="1" p={5}>
           {/* Main Content - Placeholder or additional content */}
@@ -154,29 +191,50 @@ const Home = () => {
             <StatNumber>${netWorth ? parseFloat(netWorth).toFixed(2) : '...'}</StatNumber>
             <StatHelpText>As for now</StatHelpText>
           </Stat>
+
         </Box>
         <Flex direction="row" wrap="wrap" width="100%">
+
           <Box flex="1" p={5}>
-            <CryptoPieChart labels={chartLabels} balances={chartData} />
-          </Box>
-          <Box flex="1" p={5}>
-            <ButtonGroup gap='4'>
-              <Button onClick={() => setShowGainers(true)}>Show Gainers</Button>
-              <Button onClick={() => setShowGainers(false)}>Show Losers</Button>
-              </ButtonGroup>
+
+
+            {/* Toggle and Token Display Logic */}
+
+            <Text>{showGainers ? 'Showing Top Gainers' : 'Showing Top Losers'}</Text>      <Switch isChecked={showGainers} onChange={() => setShowGainers(!showGainers)} />
+
             <Stat>
               <StatLabel>{showGainers ? 'Top Gainers' : 'Top Losers'}</StatLabel>
               <StatHelpText>
                 <ul>
-                  {(showGainers ? tokens.gainers : tokens.losers).map((token, index) => (
+                  {pageTokens.map((token, index) => ( // Use pageTokens here instead of currentTokens
                     <li key={index}>
                       {token.token_name} ({token.token_symbol}): ${parseFloat(token.price_usd).toFixed(2)} - 24h Change: {parseFloat(token.price_24h_percent_change).toFixed(2)}%
                     </li>
+                    
                   ))}
                 </ul>
+                
               </StatHelpText>
 
             </Stat>
+            {/* Pagination Controls */}
+            <Flex justifyContent="space-between" m={4}>
+              <Button onClick={() => changePage(currentPage - 1)} disabled={currentPage <= 1}>
+                Previous
+              </Button>
+
+              {/* Dynamically generate page buttons */}
+              {Array.from({ length: totalPages }, (_, i) => (
+                <Button key={i} onClick={() => changePage(i + 1)} isActive={currentPage === i + 1}>
+                  {i + 1}
+                </Button>
+              ))}
+
+              <Button onClick={() => changePage(currentPage + 1)} disabled={currentPage >= totalPages}>
+                Next
+              </Button>
+              
+            </Flex>
           </Box>
         </Flex>
       </Flex>
