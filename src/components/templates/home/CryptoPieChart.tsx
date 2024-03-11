@@ -4,11 +4,11 @@ import 'chart.js/auto';
 
 const CryptoPieChart = ({ labels, balances }) => {
   const data = {
-    labels: labels, // Dynamic labels from props
+    labels: labels, 
     datasets: [
       {
         label: 'Crypto Portfolio',
-        data: balances, // Dynamic data from props
+        data: balances, /
         backgroundColor: [
           'rgba(255, 99, 132, 0.6)',
           'rgba(54, 162, 235, 0.6)',

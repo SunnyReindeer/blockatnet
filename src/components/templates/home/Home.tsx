@@ -32,8 +32,8 @@ const Home = () => {
   const toast = useToast();
   const [showGainers, setShowGainers] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const tokensPerPage = 5; // Display 5 tokens per page
-  const [pageTokens, setPageTokens] = useState([]); // To store current page tokens
+  const tokensPerPage = 5; 
+  const [pageTokens, setPageTokens] = useState([]); 
   const [totalPages, setTotalPages] = useState(0);
 
   const { data: tokenBalances } = useEvmWalletTokenBalances({
@@ -44,7 +44,7 @@ const Home = () => {
   const [ethereumPrice, setEthereumPrice] = useState(null);
   useEffect(() => console.log('tokenBalances: ', tokenBalances), [tokenBalances]);
 
-  // Use chartLabels instead of tokenSymbols
+  // chartLabels
   const chartLabels = tokenBalances?.map(token => token.token.symbol || 'Unknown Token');
   const chartData = tokenBalances?.map(token => parseFloat(token.value));
 
@@ -91,9 +91,9 @@ const Home = () => {
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const jsonResponse = await response.json();
       const movers = showGainers ? jsonResponse.gainers : jsonResponse.losers;
-      setTokens(movers); // Assuming movers is an array
+      setTokens(movers); 
       setTotalPages(Math.ceil(movers.length / tokensPerPage));
-      setPageTokens(movers.slice(0, tokensPerPage)); // Initialize with first page
+      setPageTokens(movers.slice(0, tokensPerPage)); 
     } catch (error) {
       console.error('Error fetching top ERC20 tokens:', error);
     }
@@ -108,7 +108,7 @@ const Home = () => {
         duration: 2000,
         isClosable: true,
       });
-      return; // Prevent page change
+      return; 
     } else if (newPage > totalPages) {
       toast({
         title: "Last Page",
@@ -117,7 +117,7 @@ const Home = () => {
         duration: 2000,
         isClosable: true,
       });
-      return; // Prevent page change
+      return; 
     }
 
     setCurrentPage(newPage);
@@ -157,15 +157,9 @@ const Home = () => {
 
   return (
     <Flex direction="column">
-      {/*Portfolio Performance Chart */}
-      <Box flex="1" p={5}>
-
-      </Box>
-
-      {/* Other Content */}
       <Flex wrap="wrap" >
         <Box width="50%" p={5} >
-          {/* Sidebar Content */}
+
           <Stat>
             <StatLabel>Bitcoin Price</StatLabel>
             <StatNumber>${bitcoinPrice}</StatNumber>
@@ -181,7 +175,7 @@ const Home = () => {
 
 
         <Box width="50%" p={5} >
-          {/* Sidebar Content */}
+
           <Stat>
             <StatLabel>Net Worth</StatLabel>
             <StatNumber>${netWorth ? parseFloat(netWorth).toFixed(2) : '...'}</StatNumber>
