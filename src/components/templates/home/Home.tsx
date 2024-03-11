@@ -222,7 +222,7 @@ const Home = () => {
               ))}
 
               <Button onClick={() => changePage(currentPage + 1)} disabled={currentPage >= totalPages}>
-                Next
+                Next1
               </Button>
               
             </Flex>
