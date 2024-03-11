@@ -9,8 +9,10 @@ import {
   Tfoot,
   Heading,
   Box,
+  Link,
   useColorModeValue,
 } from '@chakra-ui/react';
+import { ExternalLinkIcon } from '@chakra-ui/icons'
 import { useEvmWalletTransactions } from '@moralisweb3/next';
 import { useSession } from 'next-auth/react';
 import { useEffect } from 'react';
@@ -50,7 +52,7 @@ const Transactions = () => {
               <Tbody>
                 {transactions?.map((tx, key) => (
                   <Tr key={key} _hover={{ bgColor: hoverTrColor }} cursor="pointer">
-                    <Td>{getEllipsisTxt(tx?.hash)}</Td>
+                    <Td>{getEllipsisTxt(tx?.hash)}<Link href={`https://etherscan.io/tx/${tx?.hash}`} isExternal><ExternalLinkIcon mx='2px' /> </Link></Td>
                     <Td>{getEllipsisTxt(tx?.from.checksum)}</Td>
                     <Td>{getEllipsisTxt(tx?.to?.checksum)}</Td>
                     <Td>{tx.gasUsed.toString()}</Td>

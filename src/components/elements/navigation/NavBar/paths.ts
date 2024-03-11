@@ -7,8 +7,12 @@ const NAV_LINKS: ISubNav[] = [
     children: [
       {
         label: 'Dashboard',
-        subLabel: 'Dashboard',
         href: '../',
+
+      },
+      {
+        label: 'Transactions',
+        href: '/transactions',
 
       },
       {
@@ -21,12 +25,6 @@ const NAV_LINKS: ISubNav[] = [
         label: 'NFT transfer',
         subLabel: 'Get your ERC721 an ERC1155 transfers',
         href: '/transfers/nft',
-
-      },
-      {
-        label: 'Transactions',
-        subLabel: 'Get your ERC721 an ERC1155 transfers',
-        href: '/transactions',
 
       },
       {
