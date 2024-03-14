@@ -1,20 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircleIcon, SettingsIcon } from '@chakra-ui/icons';
 import {
+  Box,
+  Flex,
   Stat,
   StatLabel,
   StatNumber,
   StatHelpText,
-  Flex,
-  Box,
-  useColorModeValue,
   Button,
   Switch,
   Text,
+  VStack,
+  HStack,
   useToast,
   Link,
-} from "@chakra-ui/react";
-import { ExternalLinkIcon } from '@chakra-ui/icons'
+  Image,
+  Icon,
+  IconButton,
+  useColorModeValue,
+  SimpleGrid,
+} from '@chakra-ui/react';
+import { FiUser, FiTrendingUp, FiMoreVertical } from 'react-icons/fi';
+
+import { ExternalLinkIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { useEvmWalletTokenBalances } from '@moralisweb3/next';
 import { useSession } from 'next-auth/react';
 import { useNetwork } from 'wagmi';
@@ -154,81 +161,91 @@ const Home = () => {
     setPageTokens(tokens.slice(indexOfFirstToken, indexOfLastToken));
   }, [currentPage, tokens]);
 
-
+  
+  
   return (
-    <Flex direction="column">
-      <Flex wrap="wrap" >
-        <Box width="50%" p={5} >
-
+    <Flex direction="column" p={5}>
+      <Flex direction={{ base: 'column', md: 'row' }} spacing={8} wrap="wrap" justify="space-between"></Flex>
+      <VStack spacing={8}>
+      <HStack spacing={8} w="full" alignItems="stretch">
+     
+      <Box
+      p={5}
+      shadow="sm"
+      borderWidth="1px"
+      borderRadius="2xl"
+      w="full"
+      bg={useColorModeValue('white', 'gray.800')}
+      >
+      <Stat>
+      <StatLabel fontSize="sm">Bitcoin Price</StatLabel>
+      <StatNumber fontSize="2xl" >${bitcoinPrice}</StatNumber>
+      <StatHelpText>As of now</StatHelpText>
+      </Stat>
+    </Box>
+      <Box
+        p={5}
+        shadow="sm"
+        borderWidth="1px"
+        borderRadius="2xl"
+        w="full"
+        bg={useColorModeValue('white', 'gray.800')}
+      >
+        <HStack>
+          <Icon as={FiTrendingUp} color={useColorModeValue('blue.500', 'blue.300')} boxSize="6" />
           <Stat>
-            <StatLabel>Bitcoin Price</StatLabel>
-            <StatNumber>${bitcoinPrice}</StatNumber>
-            <StatHelpText>As of now</StatHelpText>
-            <br></br>
-            <StatLabel>Ethereum Price</StatLabel>
-            <StatNumber>${ethereumPrice}</StatNumber>
+            <StatLabel fontSize="sm">Ethereum Price</StatLabel>
+            <StatNumber fontSize="2xl">${ethereumPrice}</StatNumber>
             <StatHelpText>As of now</StatHelpText>
           </Stat>
+        </HStack>
+    </Box>
+      <Box
+       p={5}
+       shadow="sm"
+       borderWidth="1px"
+       borderRadius="2xl"
+       w="full"
+       bg={useColorModeValue('white', 'gray.800')}
+      >
+      <Stat>
+        <StatLabel>Net Worth</StatLabel>
+        <StatNumber>${netWorth ? parseFloat(netWorth).toFixed(2) : '...'}</StatNumber>
+        <StatHelpText>As for now</StatHelpText>
+      </Stat>
+    </Box>
+    </HStack>
 
-        </Box>
 
-
-
-        <Box width="50%" p={5} >
-
-          <Stat>
-            <StatLabel>Net Worth</StatLabel>
-            <StatNumber>${netWorth ? parseFloat(netWorth).toFixed(2) : '...'}</StatNumber>
-            <StatHelpText>As for now</StatHelpText>
-          </Stat>
-
-        </Box>
-        <Flex direction="row" wrap="wrap" width="100%">
-
-          <Box flex="1" p={5}>
-
-
-            {/* Toggle and Token Display Logic */}
-
-            <Text>{showGainers ? 'Showing Top Gainers' : 'Showing Top Losers'}</Text>      <Switch isChecked={showGainers} onChange={() => setShowGainers(!showGainers)} />
-
-            <Stat>
-              <StatLabel>{showGainers ? 'Top Gainers' : 'Top Losers'}</StatLabel>
-              <StatHelpText>
-                <ul>
-                  {pageTokens.map((token, index) => ( // Use pageTokens here instead of currentTokens
-                    <li key={index}>
-                      <img src={token.token_logo} alt={`${token.token_name} Logo`} style={{ width: '20px', height: '20px', marginRight: '10px' }}/>
-                       {token.token_name} ({token.token_symbol}): ${parseFloat(token.price_usd).toFixed(2)} - 24h Change: {parseFloat(token.price_24h_percent_change).toFixed(2)}% <Link href={`https://www.coingecko.com/en/coins/${token?.contract_address}`} isExternal><ExternalLinkIcon mx='2px' /> </Link>
-                    </li>
-                    
-                  ))}
-                </ul>
-                
-              </StatHelpText>
-
-            </Stat>
-            {/* Pagination Controls */}
-            <Flex justifyContent="space-between" m={4}>
-              <Button onClick={() => changePage(currentPage - 1)} disabled={currentPage <= 1}>
-                Previous
-              </Button>
-
-              {/* Dynamically generate page buttons */}
-              {Array.from({ length: totalPages }, (_, i) => (
-                <Button key={i} onClick={() => changePage(i + 1)} isActive={currentPage === i + 1}>
-                  {i + 1}
-                </Button>
-              ))}
-
-              <Button onClick={() => changePage(currentPage + 1)} disabled={currentPage >= totalPages}>
-                Next 1
-              </Button>
-              
+        <Box w="full">
+          <Flex justifyContent="space-between" mb={4}>
+            <Text fontWeight="bold">{showGainers ? 'Top Gainers' : 'Top Losers'}</Text>
+            <Switch isChecked={showGainers} onChange={() => setShowGainers(!showGainers)} />
+          </Flex>
+          {pageTokens.map((token, index) => (
+            <Flex key={index} bg={hoverTrColor} p={4} mb={2} borderRadius="lg" align="center">
+              <Image src={token.token_logo} alt={`${token.token_name} Logo`} boxSize="30px" mr={4}/>
+              <Box flex="1">
+                <Text fontWeight="bold">{token.token_name} ({token.token_symbol})</Text>
+                <Text>Price: ${parseFloat(token.price_usd).toFixed(2)} - 24h Change: {parseFloat(token.price_24h_percent_change).toFixed(2)}%</Text>
+              </Box>
+              <Link href={`https://www.coingecko.com/en/coins/${token.contract_address}`} isExternal>
+                <ExternalLinkIcon />
+              </Link>
             </Flex>
-          </Box>
-        </Flex>
-      </Flex>
+          ))}
+          <HStack justifyContent="center" mt={4}>
+            <Button onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} leftIcon={<ChevronLeftIcon />}>Previous</Button>
+            {Array.from({ length: totalPages }, (_, i) => (
+              <Button key={i} onClick={() => setCurrentPage(i + 1)} isActive={currentPage === i + 1}>
+                {i + 1}
+              </Button>
+            ))}
+            <Button onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages} rightIcon={<ChevronRightIcon />}>Next</Button>
+          </HStack>
+        </Box>
+        
+      </VStack>
     </Flex>
   );
 };
