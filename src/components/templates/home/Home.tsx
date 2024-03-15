@@ -19,15 +19,14 @@ import {
   useColorModeValue,
   SimpleGrid,
 } from '@chakra-ui/react';
-import { FiUser, FiTrendingUp, FiMoreVertical } from 'react-icons/fi';
 
+import { FiUser, FiTrendingUp, FiTrendingDown, FiMoreVertical } from 'react-icons/fi';
 import { ExternalLinkIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { useEvmWalletTokenBalances } from '@moralisweb3/next';
 import { useSession } from 'next-auth/react';
 import { useNetwork } from 'wagmi';
 import CryptoPieChart from './CryptoPieChart';
 import PortfolioPerformanceChart from './PortfolioPerformanceChart';
-
 
 
 const Home = () => {
@@ -43,6 +42,9 @@ const Home = () => {
   const [pageTokens, setPageTokens] = useState([]); 
   const [totalPages, setTotalPages] = useState(0);
 
+  const [lastBitcoinPrice, setLastBitcoinPrice] = useState(null);
+  const [bitcoinPriceDirection, setBitcoinPriceDirection] = useState(null);
+
   const { data: tokenBalances } = useEvmWalletTokenBalances({
     address: data?.user?.address,
     chain: chain?.id,
@@ -57,6 +59,8 @@ const Home = () => {
 
   const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImQ3ZDY2NWQzLTIyNDYtNDQ3Ni1iYmE2LTdkOWViZmI5OTkzYyIsIm9yZ0lkIjoiMzY0ODg4IiwidXNlcklkIjoiMzc1MDEwIiwidHlwZUlkIjoiMDNmYTExNTMtZmYzOC00ZjU3LTg4YTItMTk4MGVlMWQwZWUzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MDAzMTUzMTAsImV4cCI6NDg1NjA3NTMxMH0.6heL_EFvR_PN7kN0lsL9g1kTzpK12q0rxpAn0JZuG_8';
 
+
+  
   // Calculate New Worth
   const fetchNetWorth = async () => {
     const address = data?.user?.address;
@@ -81,8 +85,7 @@ const Home = () => {
       console.error("Failed to fetch net worth:", error);
     }
   };
-
-
+  
   const fetchTopTokens = async () => {
     const url = 'https://deep-index.moralis.io/api/v2.2/market-data/erc20s/top-movers';
     const options = {
@@ -161,11 +164,11 @@ const Home = () => {
     setPageTokens(tokens.slice(indexOfFirstToken, indexOfLastToken));
   }, [currentPage, tokens]);
 
+
   
   
   return (
     <Flex direction="column" p={5}>
-      <Flex direction={{ base: 'column', md: 'row' }} spacing={8} wrap="wrap" justify="space-between"></Flex>
       <VStack spacing={8}>
       <HStack spacing={8} w="full" alignItems="stretch">
      
@@ -177,11 +180,15 @@ const Home = () => {
       w="full"
       bg={useColorModeValue('white', 'gray.800')}
       >
-      <Stat>
-      <StatLabel fontSize="sm">Bitcoin Price</StatLabel>
-      <StatNumber fontSize="2xl" >${bitcoinPrice}</StatNumber>
-      <StatHelpText>As of now</StatHelpText>
-      </Stat>
+       <HStack>
+       <Icon as={bitcoinPriceDirection === 'up' ? FiTrendingUp : FiTrendingDown} color={useColorModeValue('green.500', 'red.500')} boxSize="6" />  
+          <Stat>
+            <StatLabel fontSize="sm">Bitcoin Price</StatLabel>
+            <StatNumber fontSize="2xl" >${bitcoinPrice}</StatNumber>
+            <StatHelpText>As of now</StatHelpText>
+         </Stat>
+        </HStack>
+      
     </Box>
       <Box
         p={5}
@@ -192,7 +199,7 @@ const Home = () => {
         bg={useColorModeValue('white', 'gray.800')}
       >
         <HStack>
-          <Icon as={FiTrendingUp} color={useColorModeValue('blue.500', 'blue.300')} boxSize="6" />
+        <Icon as={bitcoinPriceDirection === 'up' ? FiTrendingUp : FiTrendingDown} color={useColorModeValue('green.500', 'red.500')} boxSize="6" />  
           <Stat>
             <StatLabel fontSize="sm">Ethereum Price</StatLabel>
             <StatNumber fontSize="2xl">${ethereumPrice}</StatNumber>
