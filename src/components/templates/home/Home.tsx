@@ -20,13 +20,11 @@ import {
   SimpleGrid,
 } from '@chakra-ui/react';
 
-import { FiUser, FiTrendingUp, FiTrendingDown, FiMoreVertical } from 'react-icons/fi';
+import { FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
 import { ExternalLinkIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { useEvmWalletTokenBalances } from '@moralisweb3/next';
 import { useSession } from 'next-auth/react';
 import { useNetwork } from 'wagmi';
-import CryptoPieChart from './CryptoPieChart';
-import PortfolioPerformanceChart from './PortfolioPerformanceChart';
 
 
 const Home = () => {
@@ -51,6 +49,7 @@ const Home = () => {
   });
   const [bitcoinPrice, setBitcoinPrice] = useState(null);
   const [ethereumPrice, setEthereumPrice] = useState(null);
+  
   useEffect(() => console.log('tokenBalances: ', tokenBalances), [tokenBalances]);
 
   // chartLabels
@@ -181,12 +180,13 @@ const Home = () => {
       bg={useColorModeValue('white', 'gray.800')}
       >
        <HStack>
-       <Icon as={bitcoinPriceDirection === 'up' ? FiTrendingUp : FiTrendingDown} color={useColorModeValue('green.500', 'red.500')} boxSize="6" />  
+       <Image src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" alt="Bitcoin Logo" boxSize="50px" mr={3} />
           <Stat>
             <StatLabel fontSize="sm">Bitcoin Price</StatLabel>
             <StatNumber fontSize="2xl" >${bitcoinPrice}</StatNumber>
             <StatHelpText>As of now</StatHelpText>
          </Stat>
+         <Icon as={bitcoinPriceDirection === 'up' ? FiTrendingUp : FiTrendingDown} color={useColorModeValue('green.500', 'red.500')} boxSize="6" />  
         </HStack>
       
     </Box>
@@ -199,12 +199,13 @@ const Home = () => {
         bg={useColorModeValue('white', 'gray.800')}
       >
         <HStack>
-        <Icon as={bitcoinPriceDirection === 'up' ? FiTrendingUp : FiTrendingDown} color={useColorModeValue('green.500', 'red.500')} boxSize="6" />  
+        <Image src="https://cryptologos.cc/logos/ethereum-eth-logo.png" alt="Ethereum Logo" boxSize="50px" mr={3} />
           <Stat>
             <StatLabel fontSize="sm">Ethereum Price</StatLabel>
             <StatNumber fontSize="2xl">${ethereumPrice}</StatNumber>
             <StatHelpText>As of now</StatHelpText>
           </Stat>
+          <Icon as={bitcoinPriceDirection === 'up' ? FiTrendingUp : FiTrendingDown} color={useColorModeValue('green.500', 'red.500')} boxSize="6" />  
         </HStack>
     </Box>
       <Box
