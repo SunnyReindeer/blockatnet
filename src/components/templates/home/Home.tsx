@@ -19,15 +19,15 @@ import {
   useColorModeValue,
   SimpleGrid,
 } from '@chakra-ui/react';
-
+import { Pie } from 'react-chartjs-2';
 import { FiUser, FiTrendingUp, FiTrendingDown, FiMoreVertical } from 'react-icons/fi';
 import { ExternalLinkIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { useEvmWalletTokenBalances } from '@moralisweb3/next';
 import { useSession } from 'next-auth/react';
 import { useNetwork } from 'wagmi';
-import CryptoPieChart from './CryptoPieChart';
 import PortfolioPerformanceChart from './PortfolioPerformanceChart';
-
+import { Chart, ArcElement, Tooltip, Legend } from 'chart.js';
+Chart.register(ArcElement, Tooltip, Legend);
 
 const Home = () => {
   const hoverTrColor = useColorModeValue('gray.100', 'gray.700');
@@ -45,22 +45,12 @@ const Home = () => {
   const [lastBitcoinPrice, setLastBitcoinPrice] = useState(null);
   const [bitcoinPriceDirection, setBitcoinPriceDirection] = useState(null);
 
-  const { data: tokenBalances } = useEvmWalletTokenBalances({
-    address: data?.user?.address,
-    chain: chain?.id,
-  });
   const [bitcoinPrice, setBitcoinPrice] = useState(null);
   const [ethereumPrice, setEthereumPrice] = useState(null);
-  useEffect(() => console.log('tokenBalances: ', tokenBalances), [tokenBalances]);
+  const [tokenBalances, setTokenBalances] = useState([]);
+  const [topTokens, setTopTokens] = useState([]);
+  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImVhMGViNmQ2LTY5YmEtNDI2OC04N2RmLWY4N2RjYjJkMDRhMyIsIm9yZ0lkIjoiMzgzMzE4IiwidXNlcklkIjoiMzkzODYwIiwidHlwZUlkIjoiOGVkMDgxYTgtM2MzZC00NmJhLWJmMWItMjY2MmY4ZTljNTBiIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MTA2OTY2NzQsImV4cCI6NDg2NjQ1NjY3NH0.2XSRCc86XZ_Tex_rHZJv3KIsmNEiXakclNUAGtBY4uA';
 
-  // chartLabels
-  const chartLabels = tokenBalances?.map(token => token.token.symbol || 'Unknown Token');
-  const chartData = tokenBalances?.map(token => parseFloat(token.value));
-
-  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImQ3ZDY2NWQzLTIyNDYtNDQ3Ni1iYmE2LTdkOWViZmI5OTkzYyIsIm9yZ0lkIjoiMzY0ODg4IiwidXNlcklkIjoiMzc1MDEwIiwidHlwZUlkIjoiMDNmYTExNTMtZmYzOC00ZjU3LTg4YTItMTk4MGVlMWQwZWUzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MDAzMTUzMTAsImV4cCI6NDg1NjA3NTMxMH0.6heL_EFvR_PN7kN0lsL9g1kTzpK12q0rxpAn0JZuG_8';
-
-
-  
   // Calculate New Worth
   const fetchNetWorth = async () => {
     const address = data?.user?.address;
@@ -101,6 +91,7 @@ const Home = () => {
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const jsonResponse = await response.json();
       const movers = showGainers ? jsonResponse.gainers : jsonResponse.losers;
+      console.log('Top Tokens:', movers);
       setTokens(movers); 
       setTotalPages(Math.ceil(movers.length / tokensPerPage));
       setPageTokens(movers.slice(0, tokensPerPage)); 
@@ -165,10 +156,80 @@ const Home = () => {
   }, [currentPage, tokens]);
 
 
+  useEffect(() => {
+    const fetchTokenBalancesAndPrices = async () => {
+      const address = data?.user?.address; 
+      const url = `https://deep-index.moralis.io/api/v2.2/wallets/${address}/tokens?chain=eth&exclude_spam=true&exclude_unverified_contracts=true`;
+  
+      try {
+        const response = await fetch(url, {
+          headers: {
+            'accept': 'application/json',
+            'X-API-Key': MORALIS_API_KEY,
+          },
+        });
+  
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+          
+        }
+  
+        const data = await response.json();
+  
+
+        console.log('Token balance:', data); 
+  
+
+        setTokens(data.result);
+      } catch (error) {
+        console.error("Failed to fetch token balances and prices:", error);
+        toast({
+          title: "An error occurred",
+          description: "Unable to fetch token balances and prices.",
+          status: "error",
+          duration: 9000,
+          isClosable: true,
+        });
+      }
+    };
+  
+    if(data?.user?.address) {
+      fetchTokenBalancesAndPrices();
+    }
+  }, [data?.user?.address]); 
+
+  const [chartData, setChartData] = useState({
+    labels: [],
+    datasets: [{
+      data: [],
+      backgroundColor: [],
+      hoverBackgroundColor: []
+    }]
+  });
+  
+  useEffect(() => {
+    if(tokenBalances.length > 0) {
+      const labels = tokenBalances.map(token => token.name || token.symbol); // Fallback to symbol if name is not available
+      const data = tokenBalances.map(token => parseFloat(token.usd_value || 0)); // Use USD value or portfolio percentage
+      const backgroundColors = tokenBalances.map((_, index) => `hsl(${index / tokenBalances.length * 360}, 70%, 70%)`); // Simple color generator
+  
+      setChartData({
+        labels,
+        datasets: [{
+          data,
+          backgroundColor: backgroundColors,
+          hoverBackgroundColor: backgroundColors
+        }]
+      });
+    }
+  }, [tokenBalances]); // Dependency array updated to tokenBalances
   
   
   return (
     <Flex direction="column" p={5}>
+      <Box w="full" p={5}>
+      {tokens.length > 0 && <Pie data={chartData} key="unique-key" />}
+</Box>
       <VStack spacing={8}>
       <HStack spacing={8} w="full" alignItems="stretch">
      
