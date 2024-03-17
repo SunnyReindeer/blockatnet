@@ -20,7 +20,7 @@ import {
   SimpleGrid,
 } from '@chakra-ui/react';
 import { Pie } from 'react-chartjs-2';
-import { FiUser, FiTrendingUp, FiTrendingDown, FiMoreVertical } from 'react-icons/fi';
+import { FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
 import { ExternalLinkIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { useEvmWalletTokenBalances } from '@moralisweb3/next';
 import { useSession } from 'next-auth/react';
@@ -47,10 +47,16 @@ const Home = () => {
 
   const [bitcoinPrice, setBitcoinPrice] = useState(null);
   const [ethereumPrice, setEthereumPrice] = useState(null);
-  const [tokenBalances, setTokenBalances] = useState([]);
-  const [topTokens, setTopTokens] = useState([]);
-  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImVhMGViNmQ2LTY5YmEtNDI2OC04N2RmLWY4N2RjYjJkMDRhMyIsIm9yZ0lkIjoiMzgzMzE4IiwidXNlcklkIjoiMzkzODYwIiwidHlwZUlkIjoiOGVkMDgxYTgtM2MzZC00NmJhLWJmMWItMjY2MmY4ZTljNTBiIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MTA2OTY2NzQsImV4cCI6NDg2NjQ1NjY3NH0.2XSRCc86XZ_Tex_rHZJv3KIsmNEiXakclNUAGtBY4uA';
+  useEffect(() => console.log('tokenBalances: ', tokenBalances), [tokenBalances]);
 
+  // chartLabels
+  const chartLabels = tokenBalances?.map(token => token.token.symbol || 'Unknown Token');
+  const chartData = tokenBalances?.map(token => parseFloat(token.value));
+
+  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImQ3ZDY2NWQzLTIyNDYtNDQ3Ni1iYmE2LTdkOWViZmI5OTkzYyIsIm9yZ0lkIjoiMzY0ODg4IiwidXNlcklkIjoiMzc1MDEwIiwidHlwZUlkIjoiMDNmYTExNTMtZmYzOC00ZjU3LTg4YTItMTk4MGVlMWQwZWUzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MDAzMTUzMTAsImV4cCI6NDg1NjA3NTMxMH0.6heL_EFvR_PN7kN0lsL9g1kTzpK12q0rxpAn0JZuG_8';
+
+
+  
   // Calculate New Worth
   const fetchNetWorth = async () => {
     const address = data?.user?.address;
@@ -242,12 +248,13 @@ const Home = () => {
       bg={useColorModeValue('white', 'gray.800')}
       >
        <HStack>
-       <Icon as={bitcoinPriceDirection === 'up' ? FiTrendingUp : FiTrendingDown} color={useColorModeValue('green.500', 'red.500')} boxSize="6" />  
+       <Image src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" alt="Bitcoin Logo" boxSize="50px" mr={3} />
           <Stat>
             <StatLabel fontSize="sm">Bitcoin Price</StatLabel>
             <StatNumber fontSize="2xl" >${bitcoinPrice}</StatNumber>
             <StatHelpText>As of now</StatHelpText>
          </Stat>
+         <Icon as={bitcoinPriceDirection === 'up' ? FiTrendingUp : FiTrendingDown} color={useColorModeValue('green.500', 'red.500')} boxSize="6" />  
         </HStack>
       
     </Box>
@@ -260,12 +267,13 @@ const Home = () => {
         bg={useColorModeValue('white', 'gray.800')}
       >
         <HStack>
-        <Icon as={bitcoinPriceDirection === 'up' ? FiTrendingUp : FiTrendingDown} color={useColorModeValue('green.500', 'red.500')} boxSize="6" />  
+        <Image src="https://cryptologos.cc/logos/ethereum-eth-logo.png" alt="Ethereum Logo" boxSize="50px" mr={3} />
           <Stat>
             <StatLabel fontSize="sm">Ethereum Price</StatLabel>
             <StatNumber fontSize="2xl">${ethereumPrice}</StatNumber>
             <StatHelpText>As of now</StatHelpText>
           </Stat>
+          <Icon as={bitcoinPriceDirection === 'up' ? FiTrendingUp : FiTrendingDown} color={useColorModeValue('green.500', 'red.500')} boxSize="6" />  
         </HStack>
     </Box>
       <Box
