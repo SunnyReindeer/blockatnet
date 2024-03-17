@@ -47,13 +47,10 @@ const Home = () => {
 
   const [bitcoinPrice, setBitcoinPrice] = useState(null);
   const [ethereumPrice, setEthereumPrice] = useState(null);
-  useEffect(() => console.log('tokenBalances: ', tokenBalances), [tokenBalances]);
+  const [tokenBalances, setTokenBalances] = useState([]);
+  const [topTokens, setTopTokens] = useState([]);
 
-  // chartLabels
-  const chartLabels = tokenBalances?.map(token => token.token.symbol || 'Unknown Token');
-  const chartData = tokenBalances?.map(token => parseFloat(token.value));
-
-  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImQ3ZDY2NWQzLTIyNDYtNDQ3Ni1iYmE2LTdkOWViZmI5OTkzYyIsIm9yZ0lkIjoiMzY0ODg4IiwidXNlcklkIjoiMzc1MDEwIiwidHlwZUlkIjoiMDNmYTExNTMtZmYzOC00ZjU3LTg4YTItMTk4MGVlMWQwZWUzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MDAzMTUzMTAsImV4cCI6NDg1NjA3NTMxMH0.6heL_EFvR_PN7kN0lsL9g1kTzpK12q0rxpAn0JZuG_8';
+  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImVhMGViNmQ2LTY5YmEtNDI2OC04N2RmLWY4N2RjYjJkMDRhMyIsIm9yZ0lkIjoiMzgzMzE4IiwidXNlcklkIjoiMzkzODYwIiwidHlwZUlkIjoiOGVkMDgxYTgtM2MzZC00NmJhLWJmMWItMjY2MmY4ZTljNTBiIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MTA2OTY2NzQsImV4cCI6NDg2NjQ1NjY3NH0.2XSRCc86XZ_Tex_rHZJv3KIsmNEiXakclNUAGtBY4uA';
 
 
   
@@ -161,10 +158,10 @@ const Home = () => {
     setPageTokens(tokens.slice(indexOfFirstToken, indexOfLastToken));
   }, [currentPage, tokens]);
 
-
   useEffect(() => {
     const fetchTokenBalancesAndPrices = async () => {
       const address = data?.user?.address; 
+      if (!address) return;
       const url = `https://deep-index.moralis.io/api/v2.2/wallets/${address}/tokens?chain=eth&exclude_spam=true&exclude_unverified_contracts=true`;
   
       try {
@@ -175,18 +172,9 @@ const Home = () => {
           },
         });
   
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-          
-        }
-  
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
-  
-
-        console.log('Token balance:', data); 
-  
-
-        setTokens(data.result);
+        setTokenBalances(data.result); 
       } catch (error) {
         console.error("Failed to fetch token balances and prices:", error);
         toast({
@@ -202,7 +190,7 @@ const Home = () => {
     if(data?.user?.address) {
       fetchTokenBalancesAndPrices();
     }
-  }, [data?.user?.address]); 
+  }, [data?.user?.address, MORALIS_API_KEY]); 
 
   const [chartData, setChartData] = useState({
     labels: [],
@@ -229,6 +217,8 @@ const Home = () => {
       });
     }
   }, [tokenBalances]); // Dependency array updated to tokenBalances
+  
+  
   
   
   return (
