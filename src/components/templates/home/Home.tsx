@@ -50,8 +50,7 @@ const Home = () => {
   const [tokenBalances, setTokenBalances] = useState([]);
   const [topTokens, setTopTokens] = useState([]);
 
-  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImVhMGViNmQ2LTY5YmEtNDI2OC04N2RmLWY4N2RjYjJkMDRhMyIsIm9yZ0lkIjoiMzgzMzE4IiwidXNlcklkIjoiMzkzODYwIiwidHlwZUlkIjoiOGVkMDgxYTgtM2MzZC00NmJhLWJmMWItMjY2MmY4ZTljNTBiIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MTA2OTY2NzQsImV4cCI6NDg2NjQ1NjY3NH0.2XSRCc86XZ_Tex_rHZJv3KIsmNEiXakclNUAGtBY4uA';
-
+  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjUzZTI3YzZjLTE1YTUtNGE0My05NTVlLTYzODg0Nzk0MTNjNyIsIm9yZ0lkIjoiMzgzMzQxIiwidXNlcklkIjoiMzkzODg0IiwidHlwZUlkIjoiNmNkZDQxNGEtNGQ1NC00YTFiLWJjYmUtMTAzZTgwMTM1ZDM1IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MTA3MDY4NTQsImV4cCI6NDg2NjQ2Njg1NH0.Jd7LRPGqGDDl3e5OULPEAx9b7vS7xCcddVToICpYgvQ';
 
   
   // Calculate New Worth
@@ -104,28 +103,33 @@ const Home = () => {
   };
 
   const changePage = (newPage) => {
+    console.log(`Trying to change to page ${newPage}, Current page: ${currentPage}`);
+  
     if (newPage < 1) {
+      console.log("Showing first page toast");
       toast({
         title: "First Page",
         description: "You are already at the first page.",
         status: "info",
-        duration: 2000,
+        duration: 5000,
         isClosable: true,
       });
-      return; 
+      return;
     } else if (newPage > totalPages) {
+      console.log("Showing last page toast");
       toast({
         title: "Last Page",
         description: "You are already at the last page.",
         status: "info",
-        duration: 2000,
+        duration: 5000,
         isClosable: true,
       });
-      return; 
+      return;
     }
-
+  
     setCurrentPage(newPage);
   };
+  
 
   const fetchPrices = async () => {
     try {
@@ -175,6 +179,7 @@ const Home = () => {
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         setTokenBalances(data.result); 
+        console.log('Token balance:', data);
       } catch (error) {
         console.error("Failed to fetch token balances and prices:", error);
         toast({
@@ -203,9 +208,9 @@ const Home = () => {
   
   useEffect(() => {
     if(tokenBalances.length > 0) {
-      const labels = tokenBalances.map(token => token.name || token.symbol); // Fallback to symbol if name is not available
-      const data = tokenBalances.map(token => parseFloat(token.usd_value || 0)); // Use USD value or portfolio percentage
-      const backgroundColors = tokenBalances.map((_, index) => `hsl(${index / tokenBalances.length * 360}, 70%, 70%)`); // Simple color generator
+      const labels = tokenBalances.map(token => token.name || token.symbol);
+      const data = tokenBalances.map(token => parseFloat(token.usd_value || 0)); 
+      const backgroundColors = tokenBalances.map((_, index) => `hsl(${index / tokenBalances.length * 360}, 70%, 70%)`); 
   
       setChartData({
         labels,
@@ -216,19 +221,18 @@ const Home = () => {
         }]
       });
     }
-  }, [tokenBalances]); // Dependency array updated to tokenBalances
+  }, [tokenBalances]);
   
   
   
   
   return (
     <Flex direction="column" p={5}>
-      <Box w="full" p={5}>
-      {tokens.length > 0 && <Pie data={chartData} key="unique-key" />}
-</Box>
+
+
       <VStack spacing={8}>
       <HStack spacing={8} w="full" alignItems="stretch">
-     
+
       <Box
       p={5}
       shadow="sm"
@@ -237,15 +241,17 @@ const Home = () => {
       w="full"
       bg={useColorModeValue('white', 'gray.800')}
       >
-       <HStack>
+       <VStack>
+        
        <Image src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" alt="Bitcoin Logo" boxSize="50px" mr={3} />
           <Stat>
-            <StatLabel fontSize="sm">Bitcoin Price</StatLabel>
-            <StatNumber fontSize="2xl" >${bitcoinPrice}</StatNumber>
-            <StatHelpText>As of now</StatHelpText>
+            
+            <StatLabel fontSize="sm" textAlign="center">Bitcoin Price</StatLabel>
+            <StatNumber fontSize="2xl" textAlign="center">${bitcoinPrice}</StatNumber>
+            <StatHelpText textAlign="center">As of now</StatHelpText>
          </Stat>
          <Icon as={bitcoinPriceDirection === 'up' ? FiTrendingUp : FiTrendingDown} color={useColorModeValue('green.500', 'red.500')} boxSize="6" />  
-        </HStack>
+        </VStack>
       
     </Box>
       <Box
@@ -256,15 +262,15 @@ const Home = () => {
         w="full"
         bg={useColorModeValue('white', 'gray.800')}
       >
-        <HStack>
+        <VStack>
         <Image src="https://cryptologos.cc/logos/ethereum-eth-logo.png" alt="Ethereum Logo" boxSize="50px" mr={3} />
           <Stat>
-            <StatLabel fontSize="sm">Ethereum Price</StatLabel>
-            <StatNumber fontSize="2xl">${ethereumPrice}</StatNumber>
-            <StatHelpText>As of now</StatHelpText>
+            <StatLabel fontSize="sm" textAlign="center">Ethereum Price</StatLabel>
+            <StatNumber fontSize="2xl" textAlign="center">${ethereumPrice}</StatNumber>
+            <StatHelpText textAlign="center">As of now</StatHelpText>
           </Stat>
           <Icon as={bitcoinPriceDirection === 'up' ? FiTrendingUp : FiTrendingDown} color={useColorModeValue('green.500', 'red.500')} boxSize="6" />  
-        </HStack>
+        </VStack>
     </Box>
       <Box
        p={5}
@@ -275,11 +281,15 @@ const Home = () => {
        bg={useColorModeValue('white', 'gray.800')}
       >
       <Stat>
-        <StatLabel>Net Worth</StatLabel>
-        <StatNumber>${netWorth ? parseFloat(netWorth).toFixed(2) : '...'}</StatNumber>
-        <StatHelpText>As for now</StatHelpText>
+        <StatLabel textAlign="center">Net Worth</StatLabel>
+        <StatNumber textAlign="center">${netWorth ? parseFloat(netWorth).toFixed(2) : '...'}</StatNumber>
+        <StatHelpText textAlign="center">As for now</StatHelpText>
+        <Box w="full" maxW="300px" mx="auto" p={5}>
+      {tokens.length > 0 && <Pie data={chartData} key="unique-key" />}
+</Box>
       </Stat>
     </Box>
+
     </HStack>
 
 
@@ -301,13 +311,17 @@ const Home = () => {
             </Flex>
           ))}
           <HStack justifyContent="center" mt={4}>
-            <Button onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} leftIcon={<ChevronLeftIcon />}>Previous</Button>
-            {Array.from({ length: totalPages }, (_, i) => (
-              <Button key={i} onClick={() => setCurrentPage(i + 1)} isActive={currentPage === i + 1}>
-                {i + 1}
-              </Button>
-            ))}
-            <Button onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages} rightIcon={<ChevronRightIcon />}>Next</Button>
+          <Button onClick={() => changePage(currentPage - 1)} disabled={currentPage === 1} leftIcon={<ChevronLeftIcon />}>
+  Previous
+</Button>
+{Array.from({ length: totalPages }, (_, i) => (
+  <Button key={i} onClick={() => changePage(i + 1)} isActive={currentPage === i + 1}>
+    {i + 1}
+  </Button>
+))}
+<Button onClick={() => changePage(currentPage + 1)} disabled={currentPage === totalPages} rightIcon={<ChevronRightIcon />}>
+  Next
+</Button>
           </HStack>
         </Box>
         
