@@ -133,13 +133,16 @@ const Home = () => {
 
   const fetchPrices = async () => {
     try {
-      const responseBitcoin = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
+      const responseBitcoin = await fetch('https://pro-api.coingecko.com/api/v3/simple/price?ids=bitcoin&include_market_cap=true&include_24hr_vol=true&include_24hr_change=true');
       const dataBitcoin = await responseBitcoin.json();
-      const responseEthereum = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
+      const responseEthereum = await fetch('https://pro-api.coingecko.com/api/v3/simple/price?ids=ethereum&include_market_cap=true&include_24hr_vol=true&include_24hr_change=true');
       const dataEthereum = await responseEthereum.json();
+
 
       setBitcoinPrice(dataBitcoin.bitcoin.usd);
       setEthereumPrice(dataEthereum.ethereum.usd);
+      console.log('dataBitcoin:', dataBitcoin)
+      console.log('dataEthereum:', dataEthereum)
     } catch (error) {
       console.error('Error fetching cryptocurrency prices:', error);
     }
@@ -251,6 +254,7 @@ const Home = () => {
             <StatHelpText textAlign="center">As of now</StatHelpText>
          </Stat>
          <Icon as={bitcoinPriceDirection === 'up' ? FiTrendingUp : FiTrendingDown} color={useColorModeValue('green.500', 'red.500')} boxSize="6" />  
+         <Image src="https://s3.coinmarketcap.com/generated/sparklines/web/7d/2781/1.svg" alt="bitcoin-7d-price-graph" class="sc-14cb040a-0 dmOeak" loading="lazy"/>
         </VStack>
       
     </Box>
@@ -270,6 +274,7 @@ const Home = () => {
             <StatHelpText textAlign="center">As of now</StatHelpText>
           </Stat>
           <Icon as={bitcoinPriceDirection === 'up' ? FiTrendingUp : FiTrendingDown} color={useColorModeValue('green.500', 'red.500')} boxSize="6" />  
+          <Image src="https://s3.coinmarketcap.com/generated/sparklines/web/7d/2781/1027.svg" alt="ethereum-7d-price-graph" class="sc-14cb040a-0 dmOeak" loading="lazy"/>
         </VStack>
     </Box>
       <Box
