@@ -44,9 +44,11 @@ const Home = () => {
 
   const [lastBitcoinPrice, setLastBitcoinPrice] = useState(null);
   const [bitcoinPriceDirection, setBitcoinPriceDirection] = useState(null);
-
+  
   const [bitcoinPrice, setBitcoinPrice] = useState(null);
+  const [bitcoinChange, setBitcoinChange] = useState(null);
   const [ethereumPrice, setEthereumPrice] = useState(null);
+  const [ethereumChange, setEthereumChange] = useState(null);
   const [tokenBalances, setTokenBalances] = useState([]);
   const [topTokens, setTopTokens] = useState([]);
 
@@ -133,14 +135,17 @@ const Home = () => {
 
   const fetchPrices = async () => {
     try {
-      const responseBitcoin = await fetch('https://pro-api.coingecko.com/api/v3/simple/price?ids=bitcoin&include_market_cap=true&include_24hr_vol=true&include_24hr_change=true');
+      const responseBitcoin = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_market_cap=true&include_24hr_vol=true&include_24hr_change=true');
       const dataBitcoin = await responseBitcoin.json();
-      const responseEthereum = await fetch('https://pro-api.coingecko.com/api/v3/simple/price?ids=ethereum&include_market_cap=true&include_24hr_vol=true&include_24hr_change=true');
+      const responseEthereum = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd&include_market_cap=true&include_24hr_vol=true&include_24hr_change=true');
       const dataEthereum = await responseEthereum.json();
 
 
       setBitcoinPrice(dataBitcoin.bitcoin.usd);
+      setBitcoinChange(dataBitcoin.bitcoin.usd_24h_change);
       setEthereumPrice(dataEthereum.ethereum.usd);
+      setEthereumChange(dataEthereum.ethereum.usd_24h_change);
+      
       console.log('dataBitcoin:', dataBitcoin)
       console.log('dataEthereum:', dataEthereum)
     } catch (error) {
@@ -251,6 +256,7 @@ const Home = () => {
             
             <StatLabel fontSize="sm" textAlign="center">Bitcoin Price</StatLabel>
             <StatNumber fontSize="2xl" textAlign="center">${bitcoinPrice}</StatNumber>
+            <StatNumber fontSize="2xl" textAlign="center">{parseFloat(bitcoinChange).toFixed(2)}%</StatNumber>
             <StatHelpText textAlign="center">As of now</StatHelpText>
          </Stat>
          <Icon as={bitcoinPriceDirection === 'up' ? FiTrendingUp : FiTrendingDown} color={useColorModeValue('green.500', 'red.500')} boxSize="6" />  
@@ -271,6 +277,7 @@ const Home = () => {
           <Stat>
             <StatLabel fontSize="sm" textAlign="center">Ethereum Price</StatLabel>
             <StatNumber fontSize="2xl" textAlign="center">${ethereumPrice}</StatNumber>
+            <StatNumber fontSize="2xl" textAlign="center">{parseFloat(ethereumChange).toFixed(2)}%</StatNumber>
             <StatHelpText textAlign="center">As of now</StatHelpText>
           </Stat>
           <Icon as={bitcoinPriceDirection === 'up' ? FiTrendingUp : FiTrendingDown} color={useColorModeValue('green.500', 'red.500')} boxSize="6" />  
