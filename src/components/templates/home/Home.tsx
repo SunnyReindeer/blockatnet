@@ -18,6 +18,7 @@ import {
   IconButton,
   useColorModeValue,
   SimpleGrid,
+  Center,
 } from '@chakra-ui/react';
 import { Pie } from 'react-chartjs-2';
 import { FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
@@ -258,9 +259,12 @@ const Home = () => {
             <StatNumber fontSize="2xl" textAlign="center">${bitcoinPrice}</StatNumber>
             <StatNumber fontSize="2xl" textAlign="center">{parseFloat(bitcoinChange).toFixed(2)}%</StatNumber>
             <StatHelpText textAlign="center">As of now</StatHelpText>
-         </Stat>
+          <Center>
          <Icon as={bitcoinPriceDirection === 'up' ? FiTrendingUp : FiTrendingDown} color={useColorModeValue('green.500', 'red.500')} boxSize="6" />  
+         </Center>
          <Image src="https://s3.coinmarketcap.com/generated/sparklines/web/7d/2781/1.svg" alt="bitcoin-7d-price-graph" class="sc-14cb040a-0 dmOeak" loading="lazy"/>
+         <StatHelpText textAlign="center">Last 7 Days</StatHelpText>
+         </Stat>
         </VStack>
       
     </Box>
@@ -279,9 +283,13 @@ const Home = () => {
             <StatNumber fontSize="2xl" textAlign="center">${ethereumPrice}</StatNumber>
             <StatNumber fontSize="2xl" textAlign="center">{parseFloat(ethereumChange).toFixed(2)}%</StatNumber>
             <StatHelpText textAlign="center">As of now</StatHelpText>
-          </Stat>
+            <Center>
           <Icon as={bitcoinPriceDirection === 'up' ? FiTrendingUp : FiTrendingDown} color={useColorModeValue('green.500', 'red.500')} boxSize="6" />  
+          </Center>
+          
           <Image src="https://s3.coinmarketcap.com/generated/sparklines/web/7d/2781/1027.svg" alt="ethereum-7d-price-graph" class="sc-14cb040a-0 dmOeak" loading="lazy"/>
+          <StatHelpText textAlign="center">Last 7 Days</StatHelpText>
+          </Stat>
         </VStack>
     </Box>
       <Box
