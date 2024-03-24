@@ -1,47 +1,49 @@
 import React from 'react';
 import { Line } from 'react-chartjs-2';
-import 'chart.js/auto';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend } from 'chart.js';
 
-const PortfolioPerformanceChart = () => {
-  const data = {
-    labels: ["January", "February", "March", "April", "May", "June"], 
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
+
+const PortfolioPerformanceChart = ({ historicalData }) => {
+  const chartData = {
+    labels: historicalData.map(data => data.date),
     datasets: [
       {
-        label: "Profit/Loss",
-        data: [2030, 10000, 4000, 2000, 20000, 10000], 
+        label: 'Portfolio Value (USD)',
+        data: historicalData.map(data => data.totalUsdValue),
         fill: false,
-        backgroundColor: "rgb(75, 192, 192)",
-        borderColor: "rgba(75, 192, 192, 0.2)",
-      },
-    ],
+        backgroundColor: 'rgb(75, 192, 192)',
+        borderColor: 'rgba(75, 192, 192, 0.2)',
+        tension: 0.1
+      }
+    ]
   };
 
   const options = {
     scales: {
       y: {
         beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Value in USD'
+        }
       },
+      x: {
+        title: {
+          display: true,
+          text: 'Date'
+        }
+      }
     },
     plugins: {
-      tooltip: {
-        callbacks: {
-          label: function(context) {
-            let label = context.dataset.label || '';
-
-            if (label) {
-              label += ': ';
-            }
-            if (context.parsed.y !== null) {
-              label += `$${context.parsed.y}`;
-            }
-            return label;
-          }
-        }
+      legend: {
+        display: true,
+        position: 'top',
       }
     }
   };
 
-  return <Line data={data} options={options} />;
+  return <Line data={chartData} options={options} />;
 };
 
 export default PortfolioPerformanceChart;

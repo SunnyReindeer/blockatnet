@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import moment from 'moment';
 import {
   Box,
   Flex,
@@ -52,16 +53,17 @@ const Home = () => {
   const [ethereumChange, setEthereumChange] = useState(null);
   const [tokenBalances, setTokenBalances] = useState([]);
   const [topTokens, setTopTokens] = useState([]);
+  const [historicalData, setHistoricalData] = useState([]);
 
-  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjUzZTI3YzZjLTE1YTUtNGE0My05NTVlLTYzODg0Nzk0MTNjNyIsIm9yZ0lkIjoiMzgzMzQxIiwidXNlcklkIjoiMzkzODg0IiwidHlwZUlkIjoiNmNkZDQxNGEtNGQ1NC00YTFiLWJjYmUtMTAzZTgwMTM1ZDM1IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MTA3MDY4NTQsImV4cCI6NDg2NjQ2Njg1NH0.Jd7LRPGqGDDl3e5OULPEAx9b7vS7xCcddVToICpYgvQ';
-
+  
+  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImRmNWRkNTA0LTllOWItNDVlZS05MGExLWY2ZDZjMTAxNDYyOSIsIm9yZ0lkIjoiMzY1MzU4IiwidXNlcklkIjoiMzc1NDk0IiwidHlwZUlkIjoiZGZkMDYwZWItY2VkZS00OTMzLWFiZDktNmVlYTljYzZmNzNkIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MDA2MzI0NTQsImV4cCI6NDg1NjM5MjQ1NH0.koDD5b4MbMOlzVr74U9yH-J1b6GJtMs766J-ZxaGT0k';
   
   // Calculate New Worth
   const fetchNetWorth = async () => {
     const address = data?.user?.address;
     if (!address) return;
 
-    const url = `https://deep-index.moralis.io/api/v2.2/wallets/${address}/net-worth?exclude_spam=true&exclude_unverified_contracts=true`;
+    const url = `https://deep-index.moralis.io/api/v2.2/wallets/${address}/net-worth?exclude_spam=true&exclude_unverified_contracts=true&to_block=17386660`;
     const options = {
       method: 'GET',
       headers: {
@@ -232,12 +234,127 @@ const Home = () => {
     }
   }, [tokenBalances]);
   
+  const populateHistoricalData = async () => {
+    let historicalData = [];
+    for (let i = 11; i >= 0; i--) {
+        const date = moment().subtract(i, 'months').startOf('month').unix();
+        const url = `https://deep-index.moralis.io/api/v2.2/dateToBlock?chain=eth&date=${date}`;
+        const options = {
+            method: 'GET',
+            headers: {
+                'accept': 'application/json',
+                'X-API-Key': MORALIS_API_KEY,
+            },
+        };
+
+        try {
+            const response = await fetch(url, options);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+            const block = data.block;
+            historicalData.push({ date: moment.unix(date).format("YYYY-MM-DD"), block });
+        } catch (error) {
+            console.error("Failed to fetch block number for date:", moment.unix(date).format("YYYY-MM-DD"), error);
+        }
+    }
+
+
+    const currentDate = moment().unix();
+    const currentUrl = `https://deep-index.moralis.io/api/v2.2/dateToBlock?chain=eth&date=${currentDate}`;
+    try {
+        const response = await fetch(currentUrl, {
+            method: 'GET',
+            headers: {
+                'accept': 'application/json',
+                'X-API-Key': MORALIS_API_KEY,
+            },
+        });
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const currentData = await response.json();
+        const currentBlock = currentData.block;
+        historicalData.push({ date: moment().format("YYYY-MM-DD"), block: currentBlock });
+    } catch (error) {
+        console.error("Failed to fetch block number for today's date:", moment().format("YYYY-MM-DD"), error);
+    }
+
+    console.log("Historical data including today:", historicalData);
+    return historicalData; 
+};
+
+
+
+useEffect(() => {
   
+    fetchNetWorth().then(() => {
+        populateHistoricalData();
+    });
+}, []); 
+
+const fetchTokenBalancesAndCalculateValue = async () => {
+  const address = data?.user?.address; 
+  if (!address) {
+    console.error("No wallet address found");
+    return [];
+  }
+
+  const historicalData = await populateHistoricalData(); 
+  let totalValuesAtBlocks = [];
+
+  for (const entry of historicalData) {
+    const url = `https://deep-index.moralis.io/api/v2.2/wallets/${address}/tokens?chain=eth&to_block=${entry.block}&exclude_spam=true&exclude_unverified_contracts=true`;
+    const options = {
+      method: 'GET',
+      headers: {
+        'accept': 'application/json',
+        'X-API-Key': MORALIS_API_KEY,
+      },
+    };
+
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+
+      
+      const totalUsdValue = data.result.reduce((acc, token) => acc + parseFloat(token.usd_value || 0), 0);
+      totalValuesAtBlocks.push({ date: entry.date, totalUsdValue: totalUsdValue.toFixed(2) }); 
+    } catch (error) {
+      console.error(`Failed to fetch token balances for block ${entry.block}:`, error);
+      totalValuesAtBlocks.push({ date: entry.date, totalUsdValue: "Data not available" });
+    }
+  }
+
+  console.log("Total USD values at blocks:", totalValuesAtBlocks);
+  return totalValuesAtBlocks;
+};
+
+useEffect(() => {
+  if (data?.user?.address) {
+    console.log('Address is available, now fetching data.');
+    fetchTokenBalancesAndCalculateValue().then((totalValuesAtBlocks) => {
+
+    });
+  } else {
+    console.log('Waiting for address to be available...');
+  }
+}, [data?.user?.address]); 
+
+useEffect(() => {
+
+  const fetchAndSetHistoricalData = async () => {
+    const data = await fetchTokenBalancesAndCalculateValue();
+    setHistoricalData(data);
+  };
+
+  fetchAndSetHistoricalData();
+}, []);
   
   
   return (
     <Flex direction="column" p={5}>
-
+<PortfolioPerformanceChart historicalData={historicalData} />
 
       <VStack spacing={8}>
       <HStack spacing={8} w="full" alignItems="stretch">
