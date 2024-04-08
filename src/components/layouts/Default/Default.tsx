@@ -3,8 +3,7 @@ import { Container } from '@chakra-ui/react';
 import { Footer, Header } from 'components/modules';
 import Head from 'next/head';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { Track } from 'components/Track';
-import { Stream } from 'components/Streams';
+import { Track } from 'components/templates/track';
 
 const Default: FC<{ children: ReactNode; pageName: string }> = ({ children, pageName }) => (
   <>

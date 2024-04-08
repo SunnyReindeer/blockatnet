@@ -43,7 +43,7 @@ const NAV_LINKS: ISubNav[] = [
   },
   {
     label: 'Track',
-    href: '/components/Track',
+    href: '/track',
   },
 ];
 
