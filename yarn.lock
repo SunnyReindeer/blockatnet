@@ -3398,6 +3398,25 @@
     invariant "^2.2.4"
     nullthrows "^1.1.1"
 
+"@react-sigma/core@^4.0.2":
+  version "4.0.2"
+  resolved "https://registry.npmjs.org/@react-sigma/core/-/core-4.0.2.tgz"
+  integrity sha512-jQKOc0GGltCNUDVf403D9cL80kyhsZglUlu//8+Sn7TUfTqWjIkhO+IcSQQRv71tDcCu9g9uz9QQRV9b+ygiLA==
+
+"@react-sigma/layout-core@^4.0.2":
+  version "4.0.2"
+  resolved "https://registry.npmjs.org/@react-sigma/layout-core/-/layout-core-4.0.2.tgz"
+  integrity sha512-7sjheSvZVOoGBEUNrCPYBmFIzCTsRfti68VoSlIoVWcsc0qtxTnIxoWTTZORH+Ee6aFi01zAFA2M5eTtAjNJIg==
+  dependencies:
+    "@react-sigma/core" "^4.0.2"
+
+"@react-sigma/layout-forceatlas2@^4.0.2":
+  version "4.0.2"
+  resolved "https://registry.npmjs.org/@react-sigma/layout-forceatlas2/-/layout-forceatlas2-4.0.2.tgz"
+  integrity sha512-EojwYxdhmE6a95wmxvJ4udWgbRRMxVLSHiwJSQ95/igyH8q6xzoJwK8r9iNOoVdUhaFKHyCB4GedblHPmG3g5A==
+  dependencies:
+    "@react-sigma/layout-core" "^4.0.2"
+
 "@remix-run/router@1.15.0":
   version "1.15.0"
   resolved "https://registry.npmjs.org/@remix-run/router/-/router-1.15.0.tgz"
@@ -6206,7 +6225,7 @@ eventemitter3@^4.0.7, eventemitter3@4.0.7:
   resolved "https://registry.npmjs.org/eventemitter3/-/eventemitter3-4.0.7.tgz"
   integrity sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==
 
-events@^3.0.0:
+events@^3.0.0, events@^3.3.0:
   version "3.3.0"
   resolved "https://registry.npmjs.org/events/-/events-3.3.0.tgz"
   integrity sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==
@@ -6816,6 +6835,31 @@ grapheme-splitter@^1.0.4:
   version "1.0.4"
   resolved "https://registry.npmjs.org/grapheme-splitter/-/grapheme-splitter-1.0.4.tgz"
   integrity sha512-bzh50DW9kTPM00T8y4o8vQg89Di9oLJVLW/KaOGIXJWP/iqCN6WKYkbNOF04vFLJhwcpYUh9ydh/+5vpOqV4YQ==
+
+graphology-layout-forceatlas2@^0.10.1:
+  version "0.10.1"
+  resolved "https://registry.npmjs.org/graphology-layout-forceatlas2/-/graphology-layout-forceatlas2-0.10.1.tgz"
+  integrity sha512-ogzBeF1FvWzjkikrIFwxhlZXvD2+wlY54lqhsrWprcdPjopM2J9HoMweUmIgwaTvY4bUYVimpSsOdvDv1gPRFQ==
+  dependencies:
+    graphology-utils "^2.1.0"
+
+graphology-types@>=0.19.0, graphology-types@>=0.23.0, graphology-types@>=0.24.0:
+  version "0.24.7"
+  resolved "https://registry.npmjs.org/graphology-types/-/graphology-types-0.24.7.tgz"
+  integrity sha512-tdcqOOpwArNjEr0gNQKCXwaNCWnQJrog14nJNQPeemcLnXQUUGrsCWpWkVKt46zLjcS6/KGoayeJfHHyPDlvwA==
+
+graphology-utils@^2.1.0, graphology-utils@^2.5.2:
+  version "2.5.2"
+  resolved "https://registry.npmjs.org/graphology-utils/-/graphology-utils-2.5.2.tgz"
+  integrity sha512-ckHg8MXrXJkOARk56ZaSCM1g1Wihe2d6iTmz1enGOz4W/l831MBCKSayeFQfowgF8wd+PQ4rlch/56Vs/VZLDQ==
+
+graphology@^0.25.1, graphology@^0.25.4:
+  version "0.25.4"
+  resolved "https://registry.npmjs.org/graphology/-/graphology-0.25.4.tgz"
+  integrity sha512-33g0Ol9nkWdD6ulw687viS8YJQBxqG5LWII6FI6nul0pq6iM2t5EKquOTFDbyTblRB3O9I+7KX4xI8u5ffekAQ==
+  dependencies:
+    events "^3.3.0"
+    obliterator "^2.0.2"
 
 has-bigints@^1.0.1, has-bigints@^1.0.2:
   version "1.0.2"
@@ -8433,6 +8477,11 @@ object.values@^1.1.5, object.values@^1.1.6:
     define-properties "^1.1.4"
     es-abstract "^1.20.4"
 
+obliterator@^2.0.2:
+  version "2.0.4"
+  resolved "https://registry.npmjs.org/obliterator/-/obliterator-2.0.4.tgz"
+  integrity sha512-lgHwxlxV1qIg1Eap7LgIeoBWIMFibOjbrYPIPJZcI1mmGAI2m3lNYpK12Y+GBdPQ0U1hRwSord7GIaawz962qQ==
+
 oidc-token-hash@^5.0.1:
   version "5.0.1"
   resolved "https://registry.npmjs.org/oidc-token-hash/-/oidc-token-hash-5.0.1.tgz"
@@ -9539,6 +9588,14 @@ side-channel@^1.0.4:
     call-bind "^1.0.0"
     get-intrinsic "^1.0.2"
     object-inspect "^1.9.0"
+
+sigma@^3.0.0-beta.16, sigma@^3.0.0-beta.17:
+  version "3.0.0-beta.17"
+  resolved "https://registry.npmjs.org/sigma/-/sigma-3.0.0-beta.17.tgz"
+  integrity sha512-1kwQnU+OQNc1bbgr10cpGRr8qV9qkqmHKn+ApNwdogM6uUXwPS8HSQzLEVsQzMScugC3k8aSAw1DszAsAHskaA==
+  dependencies:
+    events "^3.3.0"
+    graphology-utils "^2.5.2"
 
 signal-exit@^3.0.2, signal-exit@^3.0.3:
   version "3.0.7"
