@@ -16,6 +16,6 @@
     "incremental": true,
     "baseUrl": "./src"
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "src/components/elements/navigation/SideBar/navitem.js", "src/components/elements/navigation/SideBar/navhover.js", "src/components/elements/navigation/SideBar/sidebar.js"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "src/components/elements/navigation/SideBar/navitem.js", "src/components/elements/navigation/SideBar/navhover.js", "src/components/elements/navigation/SideBar/sidebar.js", "src/components/templates/track/SigmaComponent.ts", "src/components/templates/track/SigmaComponent.js"],
   "exclude": ["node_modules", "cypress"]
 }
