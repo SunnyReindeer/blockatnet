@@ -59,7 +59,7 @@ const Track = () => {
           tx.to_address === clickedNodeId
       );
       if (transaction) {
-        // Use BigNumber for arithmetic to avoid overflow
+        
         const gasPrice = ethers.BigNumber.from(transaction.gas_price);
         const gasUsed = ethers.BigNumber.from(transaction.gas);
         const transactionFee = gasPrice.mul(gasUsed);
@@ -70,6 +70,7 @@ const Track = () => {
           fromAddress: transaction.from_address,
           toAddress: transaction.to_address,
           valueEth: ethers.utils.formatEther(transaction.value),
+          hash: transaction.hash,
           transactionFeeEth,
         });
       }
@@ -85,11 +86,11 @@ const Track = () => {
         const uniqueAddresses = new Set([sessionData.user.address]);
 
         transactions.forEach((tx) => {
-          // IDs for from and to nodes
+         
           const fromId = tx.from_address;
           const toId = tx.to_address;
   
-          // Add nodes if they don't exist yet
+          
           if (!uniqueAddresses.has(fromId)) {
             nodes.push({ id: fromId, address: fromId });
             uniqueAddresses.add(fromId);
@@ -99,7 +100,7 @@ const Track = () => {
             uniqueAddresses.add(toId);
           }
   
-          // Add edges
+         
           edges.push({
             from: fromId,
             to: toId,
@@ -107,7 +108,6 @@ const Track = () => {
           });
         });
   
-        // Map nodes to the required format and highlight the user's node
         const mappedNodes = nodes.map((node) => ({
           id: node.id,
           label: node.address === sessionData.user.address ? `User: ${node.address}` : node.address
@@ -117,27 +117,22 @@ const Track = () => {
           from: edge.from,
           to: edge.to,
           label: edge.summary,
-          id: `edge_${index}` // Ensure each edge has a unique ID
+          id: `edge_${index}` 
         }));
   
-        // Construct the graph data
         const data = { nodes: mappedNodes, edges: mappedEdges };
-  
-        // Instantiate and draw the chart
+
         const chart = anychart.graph(data);
         chart.title("Transactions");
-  
-        // Customizing nodes and edges
+
         chart.nodes().labels().enabled(true).format("{%label}");
         chart.edges().labels().enabled(true).format("{%label}");
-  
-        // Layout adjustments and drawing
+
         chart.layout({ iterationCount: 0 });
         chart.nodes().labels().fontSize(12).enabled(true).anchor('auto').autoRotate(true);
         chart.container("container");
         chart.draw();
-  
-        // Auto-zoom to fit the graph on screen
+
         chart.zoom(
           0.68,
           chart.getPixelBounds().width / 2,
@@ -161,7 +156,7 @@ const Track = () => {
         <Text>Value (ETH): {selectedNode.valueEth}</Text>
         <Text>Transaction Fee (ETH): {selectedNode.transactionFeeEth}</Text>
         <LinkOverlay href={`https://etherscan.io/tx/${selectedNode.hash}`} isExternal>
-          View on Etherscan
+
         </LinkOverlay>
       </Box>
     )}
