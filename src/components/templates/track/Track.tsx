@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback  } from 'react';
 import { useSession } from 'next-auth/react';
-import { Box, useToast } from '@chakra-ui/react';
+import { Box, useToast, LinkOverlay, LinkBox, Text  } from '@chakra-ui/react';
 import anychart from 'anychart';
+import { ethers } from 'ethers';
 
 const Track = () => {
   const { data: sessionData } = useSession();
   const toast = useToast();
   const [transactions, setTransactions] = useState([]);
+  const [selectedNode, setSelectedNode] = useState(null);
 
   const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjI5N2Y2Mjc1LWVhZDQtNDNiOC04MmU2LWQyOTc2NDFkODdlYiIsIm9yZ0lkIjoiMzg0NjAyIiwidXNlcklkIjoiMzk1MTc2IiwidHlwZUlkIjoiZmZhOWY5NjAtZjZjMy00Y2JhLThhYTgtNWNhYzNkMTFkMGJmIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MTEzNTQ1MTksImV4cCI6NDg2NzExNDUxOX0.h9-OeF5VKg4jPHXylfBaXphHk_Hm1ljzxYEDPtlx_BU';
 
@@ -47,13 +49,39 @@ const Track = () => {
     fetchTransactionHistory();
   }, [sessionData?.user?.address, toast]);
 
+  const handleNodeClick = useCallback((event) => {
+    console.log(event);
+    const clickedNodeId = event.target.tag.id;
+    if (clickedNodeId) {
+      const transaction = transactions.find(
+        (tx) =>
+          tx.from_address === clickedNodeId ||
+          tx.to_address === clickedNodeId
+      );
+      if (transaction) {
+        const transactionFeeEth = ethers.utils.formatEther(
+          transaction.gas_price * transaction.gas
+        );
+        setSelectedNode({
+          blockNumber: transaction.block_number,
+          timestamp: transaction.block_timestamp,
+          fromAddress: transaction.from_address,
+          toAddress: transaction.to_address,
+          valueEth: ethers.utils.formatEther(transaction.value),
+          transactionFeeEth,
+        });
+      }
+    }
+  }, [transactions]);
+
   useEffect(() => {
     if (transactions.length > 0) {
       anychart.onDocumentReady(() => {
-        const uniqueAddresses = new Set();
-        const nodes = [];
+
+        const nodes = [{ id: 'user', label: 'User' }]; // User node
         const edges = [];
-  
+        const uniqueAddresses = new Set([sessionData.user.address]);
+
         transactions.forEach((tx) => {
           // IDs for from and to nodes
           const fromId = tx.from_address;
@@ -113,12 +141,29 @@ const Track = () => {
           chart.getPixelBounds().width / 2,
           chart.getPixelBounds().height / 2
         );
+        chart.listen('click', handleNodeClick);
       });
     }
-  }, [transactions, sessionData?.user?.address]);
+  }, [transactions, sessionData?.user?.address, handleNodeClick]);
 
   return (
-    <Box id="container" style={{ width: "100%", height: "1500px" }}></Box>
+    <LinkBox>
+    <Box id="container" style={{ width: '100%', height: '1500px' }} />
+    {selectedNode && (
+      <Box position="absolute" top="0" left="0" p={4} backgroundColor="whiteAlpha.800">
+        <Text fontWeight="bold">Transaction Details:</Text>
+        <Text>Block Number: {selectedNode.blockNumber}</Text>
+        <Text>Timestamp: {new Date(selectedNode.timestamp).toLocaleString()}</Text>
+        <Text>From: {selectedNode.fromAddress}</Text>
+        <Text>To: {selectedNode.toAddress}</Text>
+        <Text>Value (ETH): {selectedNode.valueEth}</Text>
+        <Text>Transaction Fee (ETH): {selectedNode.transactionFeeEth}</Text>
+        <LinkOverlay href={`https://etherscan.io/tx/${selectedNode.hash}`} isExternal>
+          View on Etherscan
+        </LinkOverlay>
+      </Box>
+    )}
+  </LinkBox>
   );
 };
 
