@@ -51,7 +51,7 @@ const Track = () => {
 
   const handleNodeClick = useCallback((event) => {
     console.log(event);
-    const clickedNodeId = event.target.tag.id;
+    const clickedNodeId = event.domTarget.tag.id;
     if (clickedNodeId) {
       const transaction = transactions.find(
         (tx) =>
@@ -59,9 +59,11 @@ const Track = () => {
           tx.to_address === clickedNodeId
       );
       if (transaction) {
-        const transactionFeeEth = ethers.utils.formatEther(
-          transaction.gas_price * transaction.gas
-        );
+        // Use BigNumber for arithmetic to avoid overflow
+        const gasPrice = ethers.BigNumber.from(transaction.gas_price);
+        const gasUsed = ethers.BigNumber.from(transaction.gas);
+        const transactionFee = gasPrice.mul(gasUsed);
+        const transactionFeeEth = ethers.utils.formatEther(transactionFee);
         setSelectedNode({
           blockNumber: transaction.block_number,
           timestamp: transaction.block_timestamp,
@@ -78,7 +80,7 @@ const Track = () => {
     if (transactions.length > 0) {
       anychart.onDocumentReady(() => {
 
-        const nodes = [{ id: 'user', label: 'User' }]; // User node
+        const nodes = []; 
         const edges = [];
         const uniqueAddresses = new Set([sessionData.user.address]);
 
