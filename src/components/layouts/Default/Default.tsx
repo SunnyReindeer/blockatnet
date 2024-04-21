@@ -13,9 +13,7 @@ const Default: FC<{ children: ReactNode; pageName: string }> = ({ children, page
     </Head>
     
     <Header />
-    
-
-    <Container maxW="container.lg" p={3} marginTop={100} as="main" minH="70vh">
+    <Container maxW="70vw" p={3} marginTop={100} as="main" minH="70vh">
         {children}
         </Container>
       <Footer></Footer>

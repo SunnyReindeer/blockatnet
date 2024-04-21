@@ -20,6 +20,7 @@ import {
   useColorModeValue,
   SimpleGrid,
   Center,
+  Grid,
 } from '@chakra-ui/react';
 import { Pie } from 'react-chartjs-2';
 import { FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
@@ -56,7 +57,7 @@ const Home = () => {
   const [historicalData, setHistoricalData] = useState([]);
 
   
-  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImRmNWRkNTA0LTllOWItNDVlZS05MGExLWY2ZDZjMTAxNDYyOSIsIm9yZ0lkIjoiMzY1MzU4IiwidXNlcklkIjoiMzc1NDk0IiwidHlwZUlkIjoiZGZkMDYwZWItY2VkZS00OTMzLWFiZDktNmVlYTljYzZmNzNkIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MDA2MzI0NTQsImV4cCI6NDg1NjM5MjQ1NH0.koDD5b4MbMOlzVr74U9yH-J1b6GJtMs766J-ZxaGT0k';
+  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjU5ZTQ5YWYyLTkwMTAtNGIwMi1iMTU0LWU5YWFhNTNiMjgyMiIsIm9yZ0lkIjoiMzg0NjA1IiwidXNlcklkIjoiMzk1MTc5IiwidHlwZUlkIjoiMWUzOGMxOWItNTljNi00MWRjLWE2NzAtNTdkOTExZjM2YjQ2IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MTEzNTY0MzUsImV4cCI6NDg2NzExNjQzNX0.-qwxoVBF8ZnqFKYGLua3zkgp8iuLR-3rguHLeytEg8o';
   
   // Calculate New Worth
   const fetchNetWorth = async () => {
@@ -352,85 +353,68 @@ useEffect(() => {
 }, []);
   
   
-  return (
-    <Flex direction="column" p={5}>
-<PortfolioPerformanceChart historicalData={historicalData} />
+return (
+  <Flex direction="column" p={5}>
+    <Grid templateColumns="2fr 2fr" gap={6}>
+      {/* Left Top: Portfolio Performance Chart */}
+      <Box>
+        <PortfolioPerformanceChart historicalData={historicalData} />
+      </Box>
 
-      <VStack spacing={8}>
-      <HStack spacing={8} w="full" alignItems="stretch">
+      {/* Right Top: Bitcoin and Ethereum Boxes and Net Worth displayed horizontally */}
+      <HStack spacing={5} align="stretch">
+        {[{
+          logo: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png',
+          price: bitcoinPrice,
+          change: bitcoinChange,
+          label: 'Bitcoin Price',
+          sparkline: 'https://s3.coinmarketcap.com/generated/sparklines/web/7d/2781/1.svg'
+        }, {
+          logo: 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
+          price: ethereumPrice,
+          change: ethereumChange,
+          label: 'Ethereum Price',
+          sparkline: 'https://s3.coinmarketcap.com/generated/sparklines/web/7d/2781/1027.svg'
+        }, {
+          label: 'Net Worth',
+          value: netWorth
+        }].map((item, index) => (
+          <Box
+            key={index}
+            p={5}
+            shadow="sm"
+            borderWidth="1px"
+            borderRadius="2xl"
+            bg={useColorModeValue('white', 'gray.800')}
+            flex={1}
+          >
+            <VStack>
+              {item.logo && <Image src={item.logo} alt={`${item.label} Logo`} boxSize="50px" mr={3} />}
+              <Stat>
+                <StatLabel fontSize="sm" textAlign="center">{item.label}</StatLabel>
+                <StatNumber fontSize="2xl" textAlign="center">{item.price ? `$${item.price}` : `$${item.value ? parseFloat(item.value).toFixed(2) : '...'}`}</StatNumber>
+                {item.change && <StatNumber fontSize="2xl" textAlign="center">{parseFloat(item.change).toFixed(2)}%</StatNumber>}
+                <StatHelpText textAlign="center">{item.price ? 'As of now' : 'As for now'}</StatHelpText>
+                {item.sparkline && (
+                  <>
+                    <Center>
+                      <Icon as={item.change >= 0 ? FiTrendingUp : FiTrendingDown} color={useColorModeValue('green.500', 'red.500')} boxSize="6" />
+                    </Center>
+                    <Image src={item.sparkline} alt={`${item.label} 7d price graph`} loading="lazy"/>
+                    <StatHelpText textAlign="center">Last 7 Days</StatHelpText>
+                  </>
+                )}
+              </Stat>
+            </VStack>
+          </Box>
+        ))}
+      </HStack>
+    </Grid>
 
-      <Box
-      p={5}
-      shadow="sm"
-      borderWidth="1px"
-      borderRadius="2xl"
-      w="full"
-      bg={useColorModeValue('white', 'gray.800')}
-      >
-       <VStack>
-        
-       <Image src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" alt="Bitcoin Logo" boxSize="50px" mr={3} />
-          <Stat>
-            
-            <StatLabel fontSize="sm" textAlign="center">Bitcoin Price</StatLabel>
-            <StatNumber fontSize="2xl" textAlign="center">${bitcoinPrice}</StatNumber>
-            <StatNumber fontSize="2xl" textAlign="center">{parseFloat(bitcoinChange).toFixed(2)}%</StatNumber>
-            <StatHelpText textAlign="center">As of now</StatHelpText>
-          <Center>
-         <Icon as={bitcoinPriceDirection === 'up' ? FiTrendingUp : FiTrendingDown} color={useColorModeValue('green.500', 'red.500')} boxSize="6" />  
-         </Center>
-         <Image src="https://s3.coinmarketcap.com/generated/sparklines/web/7d/2781/1.svg" alt="bitcoin-7d-price-graph" class="sc-14cb040a-0 dmOeak" loading="lazy"/>
-         <StatHelpText textAlign="center">Last 7 Days</StatHelpText>
-         </Stat>
-        </VStack>
-      
-    </Box>
-      <Box
-        p={5}
-        shadow="sm"
-        borderWidth="1px"
-        borderRadius="2xl"
-        w="full"
-        bg={useColorModeValue('white', 'gray.800')}
-      >
-        <VStack>
-        <Image src="https://cryptologos.cc/logos/ethereum-eth-logo.png" alt="Ethereum Logo" boxSize="50px" mr={3} />
-          <Stat>
-            <StatLabel fontSize="sm" textAlign="center">Ethereum Price</StatLabel>
-            <StatNumber fontSize="2xl" textAlign="center">${ethereumPrice}</StatNumber>
-            <StatNumber fontSize="2xl" textAlign="center">{parseFloat(ethereumChange).toFixed(2)}%</StatNumber>
-            <StatHelpText textAlign="center">As of now</StatHelpText>
-            <Center>
-          <Icon as={bitcoinPriceDirection === 'up' ? FiTrendingUp : FiTrendingDown} color={useColorModeValue('green.500', 'red.500')} boxSize="6" />  
-          </Center>
-          
-          <Image src="https://s3.coinmarketcap.com/generated/sparklines/web/7d/2781/1027.svg" alt="ethereum-7d-price-graph" class="sc-14cb040a-0 dmOeak" loading="lazy"/>
-          <StatHelpText textAlign="center">Last 7 Days</StatHelpText>
-          </Stat>
-        </VStack>
-    </Box>
-      <Box
-       p={5}
-       shadow="sm"
-       borderWidth="1px"
-       borderRadius="2xl"
-       w="full"
-       bg={useColorModeValue('white', 'gray.800')}
-      >
-      <Stat>
-        <StatLabel textAlign="center">Net Worth</StatLabel>
-        <StatNumber textAlign="center">${netWorth ? parseFloat(netWorth).toFixed(2) : '...'}</StatNumber>
-        <StatHelpText textAlign="center">As for now</StatHelpText>
-        <Box w="full" maxW="300px" mx="auto" p={5}>
-      {tokens.length > 0 && <Pie data={chartData} key="unique-key" />}
-</Box>
-      </Stat>
-    </Box>
-
-    </HStack>
-
-
-        <Box w="full">
+    <Grid templateColumns="3fr 2fr" gap={6} mt={6}>
+      {/* Left Bottom: Token List */}
+      <Box>
+        <Flex direction="column" gap={2}>
           <Flex justifyContent="space-between" mb={4}>
             <Text fontWeight="bold">{showGainers ? 'Top Gainers' : 'Top Losers'}</Text>
             <Switch isChecked={showGainers} onChange={() => setShowGainers(!showGainers)} />
@@ -448,23 +432,22 @@ useEffect(() => {
             </Flex>
           ))}
           <HStack justifyContent="center" mt={4}>
-          <Button onClick={() => changePage(currentPage - 1)} disabled={currentPage === 1} leftIcon={<ChevronLeftIcon />}>
-  Previous
-</Button>
-{Array.from({ length: totalPages }, (_, i) => (
-  <Button key={i} onClick={() => changePage(i + 1)} isActive={currentPage === i + 1}>
-    {i + 1}
-  </Button>
-))}
-<Button onClick={() => changePage(currentPage + 1)} disabled={currentPage === totalPages} rightIcon={<ChevronRightIcon />}>
-  Next
-</Button>
+            <Button onClick={() => changePage(currentPage - 1)} disabled={currentPage === 1} leftIcon={<ChevronLeftIcon />}>Previous</Button>
+            {Array.from({ length: totalPages }, (_, i) => (
+              <Button key={i} onClick={() => changePage(i + 1)} isActive={currentPage === i + 1}>{i + 1}</Button>
+            ))}
+            <Button onClick={() => changePage(currentPage + 1)} disabled={currentPage === totalPages} rightIcon={<ChevronRightIcon />}>Next</Button>
           </HStack>
-        </Box>
-        
-      </VStack>
-    </Flex>
-  );
+        </Flex>
+      </Box>
+
+      {/* Right Bottom: Pie Chart */}
+      <Box>
+        {tokens.length > 0 && <Pie data={chartData} key="unique-key" />}
+      </Box>
+    </Grid>
+  </Flex>
+);
 };
 
 export default Home;

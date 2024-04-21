@@ -11,13 +11,16 @@ import {
   Box,
   Link,
   useColorModeValue,
+  Flex,
+  useDisclosure,
 } from '@chakra-ui/react';
-import { ExternalLinkIcon } from '@chakra-ui/icons'
+import { ExternalLinkIcon, StarIcon } from '@chakra-ui/icons';
 import { useEvmWalletTransactions } from '@moralisweb3/next';
 import { useSession } from 'next-auth/react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { getEllipsisTxt } from 'utils/format';
 import { useNetwork } from 'wagmi';
+import Cookies from 'js-cookie';
 
 const Transactions = () => {
   const hoverTrColor = useColorModeValue('gray.100', 'gray.700');
@@ -27,8 +30,26 @@ const Transactions = () => {
     address: data?.user?.address,
     chain: chain?.id,
   });
+  const [highlightedTransactions, setHighlightedTransactions] = useState([]);
 
-  useEffect(() => console.log('transactions: ', transactions), [transactions]);
+  useEffect(() => {
+    console.log('transactions: ', transactions);
+    // Load highlighted transactions from cookies
+    const savedHighlightedTransactions = Cookies.get('highlightedTransactions');
+    if (savedHighlightedTransactions) {
+      setHighlightedTransactions(JSON.parse(savedHighlightedTransactions));
+    }
+  }, [transactions]);
+
+  const handleStarClick = (index) => {
+    if (highlightedTransactions.includes(index)) {
+      setHighlightedTransactions(highlightedTransactions.filter((i) => i !== index));
+    } else {
+      setHighlightedTransactions([...highlightedTransactions, index]);
+    }
+    // Save highlighted transactions to cookies
+    Cookies.set('highlightedTransactions', JSON.stringify([...highlightedTransactions, index]));
+  };
 
   return (
     <>
@@ -41,6 +62,7 @@ const Transactions = () => {
             <Table>
               <Thead>
                 <Tr>
+                  <Th></Th>
                   <Th>Hash</Th>
                   <Th>From</Th>
                   <Th>To</Th>
@@ -51,8 +73,19 @@ const Transactions = () => {
               </Thead>
               <Tbody>
                 {transactions?.map((tx, key) => (
-                  <Tr key={key} _hover={{ bgColor: hoverTrColor }} cursor="pointer">
-                    <Td>{getEllipsisTxt(tx?.hash)}<Link href={`https://etherscan.io/tx/${tx?.hash}`} isExternal><ExternalLinkIcon mx='2px' /> </Link></Td>
+                  <Tr
+                    key={key}
+                    _hover={{ bgColor: hoverTrColor }}
+                    cursor="pointer"
+                    bgColor={highlightedTransactions.includes(key) ? 'yellow.400' : 'transparent'}
+                  >
+                    <Td onClick={() => handleStarClick(key)}>
+                      <StarIcon color={highlightedTransactions.includes(key) ? 'yellow.500' : 'gray.400'} />
+                    </Td>
+                    <Td>
+                      {getEllipsisTxt(tx?.hash)}
+                      <Link href={`https://etherscan.io/tx/${tx?.hash}`} isExternal><ExternalLinkIcon mx='2px' /> </Link>
+                    </Td>
                     <Td>{getEllipsisTxt(tx?.from.checksum)}</Td>
                     <Td>{getEllipsisTxt(tx?.to?.checksum)}</Td>
                     <Td>{tx.gasUsed.toString()}</Td>
@@ -63,6 +96,7 @@ const Transactions = () => {
               </Tbody>
               <Tfoot>
                 <Tr>
+                  <Th></Th>
                   <Th>Hash</Th>
                   <Th>From</Th>
                   <Th>To</Th>
