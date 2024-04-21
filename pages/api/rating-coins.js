@@ -11,7 +11,7 @@ export default async function handler(req, res) {
 
   try {
     const response = await axios.get('https://api.tokeninsight.com/api/v1/news/list', options);
-    console.log(`success:${JSON.stringify(response.data)}`)
+    //console.log(`success:${JSON.stringify(response.data)}`)
     res.status(200).json(response.data);
   } catch (error) {
     console.error('Error fetching data:', error);
