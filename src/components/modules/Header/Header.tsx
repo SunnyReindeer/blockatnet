@@ -131,7 +131,6 @@ const Header = () => {
               ) : error ? (
                 <p>{error}</p>
               ) : (
-                <p>Hello</p>
                coinsData.map((coin, index) => (
                   <div key={index}>
                     <p>title	: {coin.title}</p>
