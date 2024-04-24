@@ -72,52 +72,7 @@ const Header = () => {
                   <BellIcon boxSize={6} color="orange.500" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent>
-                <PopoverArrow />
-                <PopoverCloseButton />
-                <PopoverHeader>Confirmation!</PopoverHeader>
-                <PopoverBody>
-                  <FormControl mb={4}>
-                    <FormLabel color={secondaryColor}>Type</FormLabel>
-                    <Select placeholder="Bitcoin (BTC)" color={primaryColor}>
-                      <option>Ethereum (ETH)</option>
-                    </Select>
-                  </FormControl>
-
-                  <FormControl mb={4} isRequired>
-                    <FormLabel color={secondaryColor}>Currency</FormLabel>
-                    <Input placeholder="Currency" color={primaryColor} />
-                  </FormControl>
-
-                  <FormControl as="fieldset" mb={4}>
-                    <FormLabel color={secondaryColor} mb={2}>
-                      Price Condition
-                    </FormLabel>
-                    <RadioGroup defaultValue="above">
-                      <HStack spacing="24px" color={primaryColor}>
-                        <Radio value="above">Above</Radio>
-                        <Radio value="below">Below</Radio>
-                      </HStack>
-                    </RadioGroup>
-                  </FormControl>
-
-                  <FormControl mb={4}>
-                    <FormLabel color={secondaryColor}>Price</FormLabel>
-                    <NumberInput max={50} min={10} color={primaryColor}>
-                      <NumberInputField />
-                      <NumberInputStepper>
-                        <NumberIncrementStepper />
-                        <NumberDecrementStepper />
-                      </NumberInputStepper>
-                    </NumberInput>
-                  </FormControl>
-
-                  <FormControl mb={4} isRequired>
-                    <FormLabel color={secondaryColor}>Email</FormLabel>
-                    <Input placeholder="Email" color={primaryColor} />
-                  </FormControl>
-                </PopoverBody>
-              </PopoverContent>
+              
             </Popover>
             <ConnectButton />
             <ColorModeButton />
