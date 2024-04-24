@@ -52,6 +52,7 @@ const Header = () => {
 
   const primaryColor = useColorModeValue('gray.700', 'gray.100');
   const secondaryColor = useColorModeValue('gray.500', 'gray.400');
+  
 
   return (
     <Box borderBottom="1px" borderBottomColor="chakra-border-color">

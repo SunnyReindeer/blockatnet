@@ -6,10 +6,8 @@ import {
   DrawerHeader, DrawerBody, FormControl, FormLabel, Select, Input, RadioGroup, Radio, NumberInput, NumberInputField, NumberInputStepper, NumberIncrementStepper, NumberDecrementStepper, useColorModeValue, Image, Link
 } from '@chakra-ui/react';
 import { ColorModeButton, Logo, NavBar } from 'components/elements';
-
 import { FaBell as BellIcon, FaEnvelope as EmailIcon } from 'react-icons/fa';
 import axios from 'axios';
-
 const Alert = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [size, setSize] = useState('md');
@@ -51,10 +49,38 @@ const Alert = () => {
   };
 
   const primaryColor = useColorModeValue('gray.700', 'gray.100');
-  const secondaryColor = useColorModeValue('gray.500', 'gray.400');
+  const secondaryColor = useColorModeValue('gray.500', 'gray.400'); 
 
+  const axios = require('axios');
 
-  
+let data = JSON.stringify({
+  "name": "alert",
+  "expression": "dHhfbG9nc19hZGRyZXNzID09ICcweGRhYzE3Zjk1OGQyZWU1MjNhMjIwNjIwNjk5NDU5N2MxM2Q4MzFlYzcnCiYmCnR4X2xvZ3NfZGF0YV9pbnQgPiAxMDAwMDAwMDAwMDA=",
+  "network": "ethereum-mainnet",
+  "destinationIds": [
+    "5e5c39ef-3e98-4d91-8107-acf0feb847ad"
+  ]
+});
+
+let config = {
+  method: 'post',
+  maxBodyLength: Infinity,
+  url: 'https://api.quicknode.com/quickalerts/rest/v1/notifications',
+  headers: { 
+    'accept': '*/*', 
+    'Content-Type': 'application/json', 
+    'x-api-key': 'QN_e4f3363ccaef425bacfe4e5c9f00b631'
+  },
+  data : data
+};
+
+axios.request(config)
+.then((response) => {
+  console.log(JSON.stringify(response.data));
+})
+.catch((error) => {
+  console.log(error);
+});
 
   return (  
     <Box borderBottom="1px" borderBottomColor="chakra-border-color">
@@ -94,6 +120,12 @@ const Alert = () => {
                       </NumberInputStepper>
                     </NumberInput>
                   </FormControl>
+
+                  <FormControl mb={4} isRequired>
+                    <FormLabel color={secondaryColor} >address</FormLabel>
+                    <Input placeholder='Basic usage' id="address"/>
+                      </FormControl>
+
 
                   <FormControl mb={4} isRequired>
                     <FormLabel color={secondaryColor}>Email</FormLabel>
