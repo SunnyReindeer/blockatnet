@@ -1,0 +1,25 @@
+// pages/api/Coin-history.js
+import axios from 'axios';
+
+export default async function handler(req, res) {
+  const { id } = req.query;
+  const options = {
+    headers: {
+      'TI_API_KEY': process.env.TOKENINSIGHT_API_KEY,
+      'Content-Type': 'application/json'
+    },
+    params: {
+      interval: 'day',  // 或者 'hour' 或 'minute'，根據需要
+      length: 90,       // 想要返回的數據點的數量
+      vs_currency: 'usd' // 如果需要其他貨幣可以改變
+    }
+  };
+
+  try {
+    const response = await axios.get(`https://api.tokeninsight.com/api/v1/history/coins/${id}`, options);
+    res.status(200).json(response.data);
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    res.status(500).json({ message: 'Error fetching coin data', details: error.message });
+  }
+}
