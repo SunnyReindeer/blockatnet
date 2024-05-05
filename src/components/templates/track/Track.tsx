@@ -50,16 +50,17 @@ const Track = () => {
   }, [sessionData?.user?.address, toast]);
 
   const handleNodeClick = useCallback((event) => {
-    console.log(event);
-    const clickedNodeId = event.domTarget.tag.id;
-    if (clickedNodeId) {
-      const transaction = transactions.find(
+    console.log("Full event object:", event);
+    console.log("Event target:", event.domTarget);
+    if (event.domTarget && event.domTarget.tag && event.domTarget.tag.id) {
+      const clickedNodeId = event.domTarget.tag.id;
+      console.log("Clicked node ID:", clickedNodeId);
+      const transaction = transactions.find( 
         (tx) =>
           tx.from_address === clickedNodeId ||
           tx.to_address === clickedNodeId
       );
       if (transaction) {
-        
         const gasPrice = ethers.BigNumber.from(transaction.gas_price);
         const gasUsed = ethers.BigNumber.from(transaction.gas);
         const transactionFee = gasPrice.mul(gasUsed);
@@ -74,8 +75,11 @@ const Track = () => {
           transactionFeeEth,
         });
       }
+    } else {
+      console.error("Clicked element does not have the required 'id' attribute in its tag.");
     }
   }, [transactions]);
+  
 
   useEffect(() => {
     if (transactions.length > 0) {
