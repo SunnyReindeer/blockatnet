@@ -3,7 +3,8 @@ import { Container } from '@chakra-ui/react';
 import { Footer, Header } from 'components/modules';
 import Head from 'next/head';
 
-const Default: FC<{ children: ReactNode; pageName: string }> = ({ children, pageName }) => (
+
+const TrackLayout: FC<{ children: ReactNode; pageName: string }> = ({ children, pageName }) => (
   <>
     <Head>
       <title>{`${pageName} | Blockatnet`}</title>
@@ -11,7 +12,7 @@ const Default: FC<{ children: ReactNode; pageName: string }> = ({ children, page
     </Head>
     
     <Header />
-    <Container maxW="70vw" p={3} marginTop={100} as="main" minH="70vh">
+    <Container maxW="100%" p={3} marginTop={100} as="main" minH="70vh">
         {children}
         </Container>
       <Footer></Footer>
@@ -19,4 +20,4 @@ const Default: FC<{ children: ReactNode; pageName: string }> = ({ children, page
   </>
 );
 
-export default Default;
+export default TrackLayout;

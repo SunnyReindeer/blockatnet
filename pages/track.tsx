@@ -1,11 +1,11 @@
-import { Default } from 'components/layouts/Default';
+import { TrackLayout } from 'components/layouts/Track';
 import { Track } from 'components/templates/track';
 
 const TrackPage = () => {
   return (
-    <Default pageName="Track">
+    <TrackLayout pageName="Track">
       <Track />
-    </Default>
+    </TrackLayout>
   );
 };
 
