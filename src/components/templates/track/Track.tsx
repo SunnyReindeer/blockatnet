@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import { Box, useToast, Text, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, LinkOverlay,Button, ButtonGroup  } from '@chakra-ui/react';
-import anychart from 'anychart';
+import { Input, Flex, Box, useToast, Text, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Button, InputGroup, InputRightElement, Switch, FormControl, FormLabel } from '@chakra-ui/react';
+import * as d3 from 'd3';
 import { ethers } from 'ethers';
 
 const Track = () => {
@@ -10,191 +10,322 @@ const Track = () => {
   const [transactions, setTransactions] = useState([]);
   const [selectedNode, setSelectedNode] = useState(null);
   const [interactionDetails, setInteractionDetails] = useState(null);
+  const [inputAddress, setInputAddress] = useState('');
+  const [isLocked, setIsLocked] = useState(false);
+  const svgRef = useRef(null);
+  const [fromDate, setFromDate] = useState("2023-01-01");
+  const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0]);
+  const [clickedNodeId, setClickedNodeId] = useState(null);
 
 
-  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjI5N2Y2Mjc1LWVhZDQtNDNiOC04MmU2LWQyOTc2NDFkODdlYiIsIm9yZ0lkIjoiMzg0NjAyIiwidXNlcklkIjoiMzk1MTc2IiwidHlwZUlkIjoiZmZhOWY5NjAtZjZjMy00Y2JhLThhYTgtNWNhYzNkMTFkMGJmIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MTEzNTQ1MTksImV4cCI6NDg2NzExNDUxOX0.h9-OeF5VKg4jPHXylfBaXphHk_Hm1ljzxYEDPtlx_BU';
 
+  // Fetch transaction history based on address input or user's address
   useEffect(() => {
-    if (!sessionData?.user?.address) return;
-
-    const fetchTransactionHistory = async () => {
-      const address = sessionData.user.address;
-      const url = `https://deep-index.moralis.io/api/v2.2/wallets/${address}/history?chain=eth&from_date=2023-01-01&to_date=2024-04-01&include_internal_transactions=true&nft_metadata=true&order=DESC`;
-      const options = {
-        method: 'GET',
-        headers: {
-          'accept': 'application/json',
-          'X-API-Key': MORALIS_API_KEY,
-        },
-      };
-
-      try {
-        const response = await fetch(url, options);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json();
-        setTransactions(data.result);
-      } catch (error) {
-        console.error("Failed to fetch transaction history:", error);
-        toast({
-          title: "An error occurred",
-          description: "Unable to fetch transaction history.",
-          status: "error",
-          duration: 9000,
-          isClosable: true,
-        });
-      }
-    };
-
-    fetchTransactionHistory();
-  }, [sessionData?.user?.address, toast]);
-
-const handleNodeClick = useCallback((event) => {
-    const clickedNodeId = event?.domTarget?.tag?.id;
-    if (clickedNodeId) {
-        const relatedTransactions = transactions.filter(tx => 
-            tx.from_address === clickedNodeId || tx.to_address === clickedNodeId
-        );
-
-        if (relatedTransactions.length > 0) {
-            const totalInteractions = transactions.length;
-            const interactionCount = relatedTransactions.length;
-            const interactionPercentage = (interactionCount / totalInteractions * 100).toFixed(2);
-
-            setInteractionDetails({
-                address: clickedNodeId,
-                interactionCount,
-                interactionPercentage
-            });
-
-            setSelectedNode({
-                address: clickedNodeId,
-                transactions: relatedTransactions.map(tx => ({
-                    ...tx,
-                    transactionFeeEth: ethers.utils.formatEther(ethers.BigNumber.from(tx.gas_price).mul(tx.gas))
-                }))
-            });
-        } else {
-            console.log("No transactions found for this node.");
-            setSelectedNode(null);
-            setInteractionDetails(null);
-        }
-    } else {
-        console.error("Clicked element does not have a valid 'id'.");
-        setSelectedNode(null);
-        setInteractionDetails(null);
+    if (inputAddress) {
+      fetchTransactionHistory(inputAddress);
+    } else if (sessionData?.user?.address) {
+      fetchTransactionHistory(sessionData.user.address);
     }
-}, [transactions]);
+  }, [sessionData?.user?.address, inputAddress]);
 
-  
-  
+  // Handle address input change
+  const handleAddressChange = (e) => setInputAddress(e.target.value);
 
-  useEffect(() => {
-    // Ensure we have the required user data before attempting to fetch transaction history
-    if (transactions.length > 0 && sessionData?.user?.address) {
-      anychart.onDocumentReady(() => {
-        const nodes = [];
-        const edges = [];
-        const uniqueAddresses = new Set([sessionData.user.address]);
-  
-        transactions.forEach(tx => {
-          const fromId = tx.from_address;
-          const toId = tx.to_address;
-  
-          if (!uniqueAddresses.has(fromId)) {
-            nodes.push({ id: fromId, address: fromId });
-            uniqueAddresses.add(fromId);
-          }
-          if (!uniqueAddresses.has(toId)) {
-            nodes.push({ id: toId, address: toId });
-            uniqueAddresses.add(toId);
-          }
-  
-          edges.push({
-            from: fromId,
-            to: toId,
-
-          });
-        });
-  
-        const mappedNodes = nodes.map(node => ({
-          id: node.id,
-
-          size: uniqueAddresses.has(node.id) ? 10 : 5  // Example: Larger size for more interactions
-        }));
-  
-        const mappedEdges = edges.map((edge, index) => ({
-          from: edge.from,
-          to: edge.to,
-
-          id: `edge_${index}`  // Unique ID for each edge
-        }));
-  
-        const data = { nodes: mappedNodes, edges: mappedEdges };
-  
-        const chart = anychart.graph(data);
-        chart.title("Transactions");
-  
-        chart.nodes().labels().enabled(true).format("{%label}");
-        chart.edges().labels().enabled(true).format("{%label}");
-  
-        chart.layout({ iterationCount: 0 });
-        chart.nodes().labels().fontSize(12).enabled(true).anchor('auto').autoRotate(true);
-        chart.container("container");
-        chart.draw();
-  
-        chart.zoom(
-          0.68,
-          chart.getPixelBounds().width / 2,
-          chart.getPixelBounds().height / 2
-        );
-        chart.listen('click', handleNodeClick);
+  // Submit address for fetching data
+  const handleAddressSubmit = () => {
+    const addressToUse = inputAddress.trim() || sessionData?.user?.address;
+    if (addressToUse) {
+      fetchTransactionHistory(addressToUse);
+    } else {
+      toast({
+        title: "Error",
+        description: "Please enter an address or log in.",
+        status: "warning",
+        duration: 5000,
+        isClosable: true,
       });
     }
-  }, [transactions, sessionData?.user?.address, handleNodeClick]);  // Use optional chaining here to prevent errors
+  };
+
+
+  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImVhYTg0YTFjLTY0Y2QtNDFmMS1iNGJmLTc2Nzc5NGM1YmI0ZSIsIm9yZ0lkIjoiMzY1MzU2IiwidXNlcklkIjoiMzc1NDkyIiwidHlwZUlkIjoiMGU2NDIxN2MtNzg2OS00MTc5LThhNWItM2YyNDhkZmY2NzU3IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MDA2MzIyMjYsImV4cCI6NDg1NjM5MjIyNn0.DylRjEqP-V0hBx09pJl75NYY1gAWvWf_wq4j2RerLkQ';
+
+  // Fetch transaction history from Moralis API
+  const fetchTransactionHistory = async (address) => {
+    const url = `https://deep-index.moralis.io/api/v2.2/wallets/${address}/history?chain=eth&from_date=${fromDate}&to_date=${toDate}&include_internal_transactions=true&nft_metadata=true&order=DESC`;
+    const options = {
+      method: 'GET',
+      headers: {
+        'accept': 'application/json',
+        'X-API-Key': MORALIS_API_KEY,
+      },
+    };
+
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      processTransactions(data.result); // Processing to handle null addresses
+    } catch (error) {
+      console.error("Failed to fetch transaction history:", error);
+      toast({
+        title: "An error occurred",
+        description: "Unable to fetch transaction history.",
+        status: "error",
+        duration: 9000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const processTransactions = (transactions) => {
+    const processed = transactions.reduce((acc, tx) => {
+      // Filter out transactions involving the null address in any significant role
+      if (tx.from_address === "0x0000000000000000000000000000000000000000") {
+        if (tx.erc20_transfers && tx.erc20_transfers.length > 0) {
+          tx.from_address = tx.erc20_transfers[0].from_address;
+        } else {
+          return acc; // Skip adding this transaction if we can't resolve a real address
+        }
+      }
+      
+      // Similar handling could be added for to_address if necessary
+      if (tx.to_address === "0x0000000000000000000000000000000000000000" && tx.erc20_transfers && tx.erc20_transfers.length > 0) {
+        tx.to_address = tx.erc20_transfers[0].to_address;
+      }
+  
+      acc.push(tx);
+      return acc;
+    }, []);
+    setTransactions(processed);
+    updateGraph(processed);
+  };
+
+  const handleNodeClick = useCallback((node) => {
+    console.log("Node clicked:", node);
+
+    setClickedNodeId(node.id);
+
+    const relatedTransactions = transactions.filter(tx =>
+      tx.from_address === node.id || tx.to_address === node.id
+    );
+
+    if (relatedTransactions.length > 0) {
+      const totalInteractions = transactions.length;
+      const interactionCount = relatedTransactions.length;
+      const interactionPercentage = (interactionCount / totalInteractions * 100).toFixed(2);
+
+      setInteractionDetails({
+        address: node.id,
+        interactionCount,
+        interactionPercentage
+      });
+
+      setSelectedNode({
+        address: node.id,
+        transactions: relatedTransactions.map(tx => ({
+          ...tx,
+          transactionFeeEth: ethers.utils.formatEther(ethers.BigNumber.from(tx.gas_price).mul(tx.gas))
+        }))
+      });
+
+    } else {
+      setInteractionDetails(null);
+      setSelectedNode(null);
+    }
+  }, [transactions, isLocked]); 
+
+
+
+
+
+
+  // Update graph visualization
+  useEffect(() => {
+    if (!svgRef.current) return;
+    if (transactions.length > 0) {
+      updateGraph(transactions);
+    }
+  }, [transactions, svgRef.current]);
+
+
+
   
 
-return (
-    <Box>
-        <Box id="container" style={{ width: '50%', height: '1000px' }} />
+  // Update graph visualization
+  const updateGraph = (transactions) => {
+    if (!svgRef.current) return;
+
+
+    d3.select(svgRef.current).selectAll("*").remove();
+
+    const width = svgRef.current.clientWidth;
+    const height = svgRef.current.clientHeight;
+
+    // Setup nodes and links
+    const nodeIds = new Set(transactions.flatMap(tx => [`${tx.from_address}`, `${tx.to_address}`]));
+    const nodes = Array.from(nodeIds).map(id => ({ id }));
+    const links = transactions.map(tx => ({
+      source: `${tx.from_address}`,
+      target: `${tx.to_address}`
+    }));
+
+    // Setup simulation
+    const simulation = d3.forceSimulation(nodes)
+      .force("link", d3.forceLink(links).id(d => d.id))
+      .force("charge", d3.forceManyBody().strength(-400))
+      .force("center", d3.forceCenter(width / 2, height / 2));
+
+    const svg = d3.select(svgRef.current)
+      .call(d3.zoom().on("zoom", (event) => {
+        svg.attr("transform", event.transform);
+      }))
+      .append('g');
+
+    // Draw links
+    svg.append("g")
+      .attr("stroke", "#999")
+      .attr("stroke-opacity", 0.6)
+      .selectAll("line")
+      .data(links)
+      .enter().append("line");
+
+    // Draw nodes
+    const node = svg.append("g")
+      .attr("stroke", "#fff")
+      .attr("stroke-width", 1.5)
+      .selectAll("circle")
+      .data(nodes)
+      .enter().append("circle")
+      .attr("r", d => d.id === sessionData?.user?.address ? 10 : (d.id === clickedNodeId ? 6 : 5))
+      .attr("fill", d => d.id === clickedNodeId ? "green" : "blue")
+      .on("click", handleNodeClick)
+      .call(d3.drag()
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended));
+
+    if (isLocked) {
+      node.on("click", null); 
+    } else {
+      node.on("click", (event, d) => handleNodeClick(d));
+    }
+
+    node.append("title").text(d => d.id);
+
+    simulation.on("tick", () => {
+      svg.selectAll("line")
+        .attr("x1", d => d.source.x)
+        .attr("y1", d => d.source.y)
+        .attr("x2", d => d.target.x)
+        .attr("y2", d => d.target.y);
+
+      node
+        .attr("cx", d => d.x)
+        .attr("cy", d => d.y);
+    });
+
+    function dragstarted(event, d) {
+      if (!event.active) simulation.alphaTarget(0.3).restart();
+      d.fx = d.x;
+      d.fy = d.y;
+    }
+
+    function dragged(event, d) {
+      d.fx = event.x;
+      d.fy = event.y;
+    }
+
+    function dragended(event, d) {
+      if (!event.active) simulation.alphaTarget(0);
+      d.fx = null;
+      d.fy = null;
+    }
+  };
+
+
+  useEffect(() => {
+    if (transactions.length > 0) {
+      updateGraph(transactions);
+    }
+  }, [transactions, svgRef.current, isLocked]); 
+
+
+
+
+  return (
+    <Flex>
+      <Box flex="1" p={4} overflowY="auto" maxW="600px">
+        <Box mb={4}>
+          <Box mb={4}>
+            <FormLabel htmlFor="from-date">From Date</FormLabel>
+            <Input
+              id="from-date"
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+            />
+
+            <FormLabel htmlFor="to-date">To Date</FormLabel>
+            <Input
+              id="to-date"
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+            />
+
+            <Button mt={4} colorScheme="blue" onClick={handleAddressSubmit}>Load</Button>
+          </Box>
+
+
+
+          <Input
+            placeholder="Enter wallet address"
+            value={inputAddress}
+            onChange={handleAddressChange}
+          />
+
+        </Box>
         {interactionDetails && (
-            <Box p={4}>
-                <Text fontWeight="bold">Address: {interactionDetails.address}</Text>
-                <Text>Interactions: {interactionDetails.interactionCount}</Text>
-                <Text>Percentage of Total Interactions: {interactionDetails.interactionPercentage}%</Text>
-                <Button onClick={() => setSelectedNode(prev => ({ ...prev, showDetails: !prev.showDetails }))}>
-                    {selectedNode?.showDetails ? 'Hide Details' : 'Show Details'}
-                </Button>
-            </Box>
+          <Box mb={4}>
+            <Text fontWeight="bold">Address: {interactionDetails.address}</Text>
+            <Text>Interactions: {interactionDetails.interactionCount}</Text>
+            <Text>Percentage of Total Interactions: {interactionDetails.interactionPercentage}%</Text>
+            <Button onClick={() => setSelectedNode(prev => ({ ...prev, showDetails: !prev.showDetails }))}>
+              {selectedNode?.showDetails ? 'Hide Details' : 'Show Details'}
+            </Button>
+          </Box>
         )}
         {selectedNode?.showDetails && (
-            <Accordion allowToggle>
-                {selectedNode.transactions.map((tx, index) => (
-                    <AccordionItem key={index}>
-                        <h2>
-                            <AccordionButton>
-                                <Box flex="1" textAlign="left">
-                                    Transaction on {new Date(tx.block_timestamp).toLocaleString()}
-                                </Box>
-                                <AccordionIcon />
-                            </AccordionButton>
-                        </h2>
-                        <AccordionPanel pb={4}>
-                            <Text>From: {tx.from_address}</Text>
-                            <Text>To: {tx.to_address}</Text>
-                            <Text>Value: {ethers.utils.formatEther(tx.value)} ETH</Text>
-                            <Text>Gas Used: {tx.gas} units</Text>
-                            <Text>Transaction Fee: {tx.transactionFeeEth} ETH</Text>
-
-                        </AccordionPanel>
-                    </AccordionItem>
-                ))}
-            </Accordion>
+          <Accordion allowToggle>
+            {selectedNode.transactions.map((tx, index) => (
+              <AccordionItem key={index}>
+                <h2>
+                  <AccordionButton>
+                    <Box flex="1" textAlign="left">
+                      {tx.summary} on {new Date(tx.block_timestamp).toLocaleString()}
+                    </Box>
+                    <AccordionIcon />
+                  </AccordionButton>
+                </h2>
+                <AccordionPanel pb={4}>
+                  <Text>From: {tx.from_address}</Text>
+                  <Text>To: {tx.to_address}</Text>
+                  <Text>Value: {ethers.utils.formatEther(tx.value)} ETH</Text>
+                  <Text>Gas Used: {tx.gas} units</Text>
+                  <Text>Transaction Fee: {tx.transactionFeeEth} ETH</Text>
+                </AccordionPanel>
+              </AccordionItem>
+            ))}
+          </Accordion>
         )}
-    </Box>
-);
-
-  
-  
+      </Box>
+      <Box flex="3" id="container" style={{ height: '1150px' }}>
+        <svg ref={svgRef} width="100%" height="100%"></svg>
+      </Box>
+    </Flex>
+  );
 };
+
 
 export default Track;

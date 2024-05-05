@@ -12,7 +12,7 @@ const TrackLayout: FC<{ children: ReactNode; pageName: string }> = ({ children, 
     </Head>
     
     <Header />
-    <Container maxW="100%" p={3} marginTop={100} as="main" minH="70vh">
+    <Container maxW="100%" p={3} marginTop={25} as="main" minH="70vh">
         {children}
         </Container>
       <Footer></Footer>
