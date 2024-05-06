@@ -1,140 +1,162 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useSession } from 'next-auth/react';
 import {
-  Box, Container, Flex, HStack, Popover, PopoverTrigger, PopoverContent,
-  PopoverArrow, PopoverCloseButton, PopoverHeader, PopoverBody, Button,
-  useDisclosure, Drawer, DrawerOverlay, DrawerContent, DrawerCloseButton,
-  DrawerHeader, DrawerBody, FormControl, FormLabel, Select, Input, RadioGroup, Radio, NumberInput, NumberInputField, NumberInputStepper, NumberIncrementStepper, NumberDecrementStepper, useColorModeValue, Image, Link
+  Box,
+  FormControl,
+  FormLabel,
+  Flex,
+  useColorModeValue,
+  Select,
+  GridItem,
+  Grid,
+  Icon,
+  Text,
+  RadioGroup,
+  Stack,
+  Radio,
+  Input,
+  Button,
+  List,
+  ListItem,
+  IconButton,
+  Divider,
 } from '@chakra-ui/react';
-import { ColorModeButton, Logo, NavBar } from 'components/elements';
-import { FaBell as BellIcon, FaEnvelope as EmailIcon } from 'react-icons/fa';
+import { FaBitcoin, FaEthereum, FaSun, FaMoon, FaGlobeAmericas, FaGlobeAsia, FaTether } from 'react-icons/fa';
+import { CloseIcon } from '@chakra-ui/icons';
 import axios from 'axios';
+import { toast } from '@chakra-ui/toast';
+import { useToast } from '@chakra-ui/react';  
+
 const Alert = () => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [size, setSize] = useState('md');
-  
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [coinsData, setCoinsData] = useState([]);
+  const [selectedOption, setSelectedOption] = useState('wallet');
+  const [targetPrice, setTargetPrice] = useState('');
+  const [email, setEmail] = useState('');
+  const [alertList, setAlertList] = useState([]);
+  const [quicknodeUrl, setQuicknodeUrl] = useState('');
+  const [pipedreamUrl, setPipedreamUrl] = useState('');
+  const toast = useToast();
 
   useEffect(() => {
-    console.log("useEffect is triggered for fetching data.");
-    const fetchData = async () => {
-      console.log("Starting data fetch...");
-      setIsLoading(true);
-      setError(null);
-      try {
-        const response = await axios.get('/api/rating-coins');
-        console.log("Response received:", response.data);
-        if (response.data && response.data.data && response.data.data.items) {
-          setCoinsData(response.data.data.items);
-        } else {
-          setError('No items found');
-          setCoinsData([]);
-        }
-        setIsLoading(false);
-        console.log("Data has been set.");
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        setError('Failed to fetch data');
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
+    // Initialize QuickNode and Pipedream URLs
+    setQuicknodeUrl('https://your-quicknode-url.com');
+    setPipedreamUrl('https://your-pipedream-url.com');
   }, []);
 
-  const handleClick = (newSize) => {
-    setSize(newSize);
-    onOpen();
+  const handleAddAlert = async (e) => {
+    e.preventDefault();
+    try {
+      // Create a new alert using QuickNode
+      const response = await axios.post(`${quicknodeUrl}/alerts`, {
+        alertType: selectedOption,
+        targetPrice,
+        email,
+      });
+      if (response.status === 201) {
+        // Add the new alert to the list
+        setAlertList((prevList) => [...prevList, response.data]);
+        toast({ title: 'Alert created successfully', status: 'success' });
+      } else {
+        toast({ title: 'Error creating alert', status: 'error' });
+      }
+    } catch (error) {
+      console.error(error);
+      toast({ title: 'Error creating alert', status: 'error' });
+    }
   };
 
-  const primaryColor = useColorModeValue('gray.700', 'gray.100');
-  const secondaryColor = useColorModeValue('gray.500', 'gray.400'); 
+  const handleCheckAlerts = async () => {
+    try {
+      // Check for triggered alerts using QuickNode
+      const response = await axios.get(`${quicknodeUrl}/alerts/triggered`);
+      if (response.status === 200) {
+        // Loop through triggered alerts and send notifications using Pipedream
+        response.data.forEach((alert) => {
+          axios.post(`${pipedreamUrl}/notifications`, {
+            alertType: alert.alertType,
+            targetPrice: alert.targetPrice,
+            email: alert.email,
+          });
+        });
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
-  const axios = require('axios');
-
-let data = JSON.stringify({
-  "name": "alert",
-  "expression": "dHhfbG9nc19hZGRyZXNzID09ICcweGRhYzE3Zjk1OGQyZWU1MjNhMjIwNjIwNjk5NDU5N2MxM2Q4MzFlYzcnCiYmCnR4X2xvZ3NfZGF0YV9pbnQgPiAxMDAwMDAwMDAwMDA=",
-  "network": "ethereum-mainnet",
-  "destinationIds": [
-    "5e5c39ef-3e98-4d91-8107-acf0feb847ad"
-  ]
-});
-
-let config = {
-  method: 'post',
-  maxBodyLength: Infinity,
-  url: 'https://api.quicknode.com/quickalerts/rest/v1/notifications',
-  headers: { 
-    'accept': '*/*', 
-    'Content-Type': 'application/json', 
-    'x-api-key': 'QN_e4f3363ccaef425bacfe4e5c9f00b631'
-  },
-  data : data
-};
-
-axios.request(config)
-.then((response) => {
-  console.log(JSON.stringify(response.data));
-})
-.catch((error) => {
-  console.log(error);
-});
-
-  return (  
-    <Box borderBottom="1px" borderBottomColor="chakra-border-color">
-            <Container maxW="container.xl" p={'10px'}>
-    <Popover>
-    <FormControl mb={4}>
-                    <FormLabel color={secondaryColor}>Type</FormLabel>
-                    <Select placeholder="Bitcoin (BTC)" color={primaryColor}>
-                      <option>Ethereum (ETH)</option>
-                    </Select>
-                  </FormControl>
-
-                  <FormControl mb={4} isRequired>
-                    <FormLabel color={secondaryColor}>Currency</FormLabel>
-                    <Input placeholder="Currency" color={primaryColor} />
-                  </FormControl>
-
-                  <FormControl as="fieldset" mb={4}>
-                    <FormLabel color={secondaryColor} mb={2}>
-                      Price Condition
-                    </FormLabel>
-                    <RadioGroup defaultValue="above">
-                      <HStack spacing="24px" color={primaryColor}>
-                        <Radio value="above">Above</Radio>
-                        <Radio value="below">Below</Radio>
-                      </HStack>
-                    </RadioGroup>
-                  </FormControl>
-
-                  <FormControl mb={4}>
-                    <FormLabel color={secondaryColor}>Price</FormLabel>
-                    <NumberInput max={50} min={10} color={primaryColor}>
-                      <NumberInputField />
-                      <NumberInputStepper>
-                        <NumberIncrementStepper />
-                        <NumberDecrementStepper />
-                      </NumberInputStepper>
-                    </NumberInput>
-                  </FormControl>
-
-                  <FormControl mb={4} isRequired>
-                    <FormLabel color={secondaryColor} >address</FormLabel>
-                    <Input placeholder='Basic usage' id="address"/>
-                      </FormControl>
-
-
-                  <FormControl mb={4} isRequired>
-                    <FormLabel color={secondaryColor}>Email</FormLabel>
-                    <Input placeholder="Email" color={primaryColor} />
-                  </FormControl>
-                  </Popover>
-                  </Container>
-                  </Box>
-
+  return (
+    <Box p={4}>
+      <Flex justify="space-between" mb={4}>
+        <Box w="48%" mr={4}>
+          <Text fontSize="2xl" mb={4}>Cryptocurrency Price Alert</Text>
+          <form onSubmit={handleAddAlert}>
+            <RadioGroup onChange={(value) => setSelectedOption(value)} value={selectedOption}>
+              <Stack direction="row">
+                <Radio value="wallet">Monitor Wallet</Radio>
+                <Radio value="smartContract">Monitor Smart Contract</Radio>
+                <Radio value="burnedFee">Burned Fee</Radio>
+              </Stack>
+            </RadioGroup>
+            {selectedOption === 'wallet' && (
+              <FormControl isRequired mt={4}>
+                <FormLabel>Wallet Address</FormLabel>
+                <Input type="text" value={targetPrice} onChange={(e) => setTargetPrice(e.target.value)} />
+                <FormLabel>Gas Price</FormLabel>
+                <Input type="text" value={targetPrice} onChange={(e) => setTargetPrice(e.target.value)} />
+              </FormControl>
+            )}
+            {selectedOption === 'smartContract' && (
+              <FormControl isRequired mt={4}>
+                <FormLabel>Smart Contract Hash</FormLabel>
+                <Input type="text" value={targetPrice} onChange={(e) => setTargetPrice(e.target.value)} />
+                <FormLabel>Gas Price</FormLabel>
+                <Input type="text" value={targetPrice} onChange={(e) => setTargetPrice(e.target.value)} />
+              </FormControl>
+            )}
+            {selectedOption === 'burnedFee' && (
+              <FormControl isRequired mt={4}>
+                <FormLabel>Burned Fee Amount</FormLabel>
+                <Input type="number" value={targetPrice} onChange={(e) => setTargetPrice(e.target.value)} />
+              </FormControl>
+            )}
+            <FormControl isRequired mt={4}>
+              <FormLabel>Email for Alerts</FormLabel>
+              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            </FormControl>
+            <Button colorScheme="blue" type="submit" mt={4} isDisabled={alertList.length >= 3}>
+              Add Alert
+           </Button>
+          </form>
+        </Box>
+        <Box w="48%" ml={4}>
+          <Text fontSize="2xl" mb={4}>
+            Alert List
+          </Text>
+          <List>
+            {alertList.map((alert) => (
+              <ListItem key={alert.id}>
+                <Flex alignItems="center">
+                  <Text flex="1">{alert.alertType}</Text>
+                  <Text>{alert.targetPrice}</Text>
+                  <Text>{alert.email}</Text>
+                  <IconButton
+                    aria-label="Remove alert"
+                    icon={<CloseIcon />}
+                    size="sm"
+                    onClick={() => {
+                      // Remove the alert from the list
+                      setAlertList((prevList) => prevList.filter((a) => a.id !== alert.id));
+                    }}
+                  />
+                </Flex>
+              </ListItem>
+            ))}
+          </List>
+          <Button colorScheme="blue" mt={4} onClick={handleCheckAlerts}>
+            Check Alerts
+          </Button>
+        </Box>
+      </Flex>
+    </Box>
   );
 };
 

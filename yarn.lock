@@ -1923,7 +1923,7 @@
     "@chakra-ui/shared-utils" "2.0.5"
     "@chakra-ui/theme-tools" "2.1.2"
 
-"@chakra-ui/toast@7.0.2":
+"@chakra-ui/toast@^7.0.2", "@chakra-ui/toast@7.0.2":
   version "7.0.2"
   resolved "https://registry.npmjs.org/@chakra-ui/toast/-/toast-7.0.2.tgz"
   integrity sha512-yvRP8jFKRs/YnkuE41BVTq9nB2v/KDRmje9u6dgDmE5+1bFt3bwjdf9gVbif4u5Ve7F7BGk5E093ARRVtvLvXA==
