@@ -21,6 +21,7 @@ import {
   SimpleGrid,
   Center,
   Grid,
+  Heading,
 } from '@chakra-ui/react';
 import { Pie } from 'react-chartjs-2';
 import { FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
@@ -57,8 +58,7 @@ const Home = () => {
   const [historicalData, setHistoricalData] = useState([]);
 
   
-  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjU5ZTQ5YWYyLTkwMTAtNGIwMi1iMTU0LWU5YWFhNTNiMjgyMiIsIm9yZ0lkIjoiMzg0NjA1IiwidXNlcklkIjoiMzk1MTc5IiwidHlwZUlkIjoiMWUzOGMxOWItNTljNi00MWRjLWE2NzAtNTdkOTExZjM2YjQ2IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MTEzNTY0MzUsImV4cCI6NDg2NzExNjQzNX0.-qwxoVBF8ZnqFKYGLua3zkgp8iuLR-3rguHLeytEg8o';
-  
+  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjgxZGRhMTUyLTJjNjItNDM3MS1hMWYxLThiNjBkNmFmOGY0NCIsIm9yZ0lkIjoiMzY1MzUyIiwidXNlcklkIjoiMzc1NDg4IiwidHlwZUlkIjoiNDVhYTUzYTItMTZiYy00ZTUyLThhYzQtN2Y1MDMxZDU2NDE4IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MDA2MzE1MTAsImV4cCI6NDg1NjM5MTUxMH0.CZoF2bzrUxc5Lz1EynGjFPnG5Cxy2MXj4MSpFr6RAlQ';
   // Calculate New Worth
   const fetchNetWorth = async () => {
     const address = data?.user?.address;
@@ -358,11 +358,15 @@ return (
     <Grid templateColumns="2fr 2fr" gap={6}>
       {/* Left Top: Portfolio Performance Chart */}
       <Box>
+        <Heading size="md" p={3} >Portfolio</Heading>
         <PortfolioPerformanceChart historicalData={historicalData} />
       </Box>
 
       {/* Right Top: Bitcoin and Ethereum Boxes and Net Worth displayed horizontally */}
+      <Box>
+      <Heading size="md" p={3} >Your Assests</Heading>
       <HStack spacing={5} align="stretch">
+      
         {[{
           logo: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png',
           price: bitcoinPrice,
@@ -398,9 +402,6 @@ return (
                 <StatHelpText textAlign="center">{item.price ? 'As of now' : 'As for now'}</StatHelpText>
                 {item.sparkline && (
                   <>
-                    <Center>
-                      <Icon as={item.change >= 0 ? FiTrendingUp : FiTrendingDown} color={useColorModeValue('green.500', 'red.500')} boxSize="6" />
-                    </Center>
                     <Image src={item.sparkline} alt={`${item.label} 7d price graph`} loading="lazy"/>
                     <StatHelpText textAlign="center">Last 7 Days</StatHelpText>
                   </>
@@ -410,6 +411,7 @@ return (
           </Box>
         ))}
       </HStack>
+      </Box>
     </Grid>
 
     <Grid templateColumns="3fr 2fr" gap={6} mt={6}>
