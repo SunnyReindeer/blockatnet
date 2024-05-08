@@ -22,6 +22,12 @@ import {
   Center,
   Grid,
   Heading,
+  Table,
+  Th,
+  Tr,
+  Tbody,
+  Thead,
+  Td,
 } from '@chakra-ui/react';
 import { Pie } from 'react-chartjs-2';
 import { FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
@@ -31,10 +37,13 @@ import { useSession } from 'next-auth/react';
 import { useNetwork } from 'wagmi';
 import PortfolioPerformanceChart from './PortfolioPerformanceChart';
 import { Chart, ArcElement, Tooltip, Legend } from 'chart.js';
+import Cookies from 'js-cookie';
+import { getEllipsisTxt } from 'utils/format';
 Chart.register(ArcElement, Tooltip, Legend);
 
 const Home = () => {
   const hoverTrColor = useColorModeValue('gray.100', 'gray.700');
+  const [showHighlightedTransactions, setShowHighlightedTransactions] = useState(false);
   const { data } = useSession();
   const { chain } = useNetwork();
   const [netWorth, setNetWorth] = useState(null);
@@ -56,7 +65,18 @@ const Home = () => {
   const [tokenBalances, setTokenBalances] = useState([]);
   const [topTokens, setTopTokens] = useState([]);
   const [historicalData, setHistoricalData] = useState([]);
+  const [highlightedTransactions, setHighlightedTransactions] = useState([]);
 
+  
+
+  useEffect(() => {
+    const savedHighlightedTransactions = Cookies.get('highlightedTransactions');
+    if (savedHighlightedTransactions && savedHighlightedTransactions.trim() !== '') {
+      setHighlightedTransactions(JSON.parse(savedHighlightedTransactions));
+      setShowHighlightedTransactions(true); // 設置 showHighlightedTransactions 的初始值
+    }
+  }, []);
+  
   
   const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjgxZGRhMTUyLTJjNjItNDM3MS1hMWYxLThiNjBkNmFmOGY0NCIsIm9yZ0lkIjoiMzY1MzUyIiwidXNlcklkIjoiMzc1NDg4IiwidHlwZUlkIjoiNDVhYTUzYTItMTZiYy00ZTUyLThhYzQtN2Y1MDMxZDU2NDE4IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MDA2MzE1MTAsImV4cCI6NDg1NjM5MTUxMH0.CZoF2bzrUxc5Lz1EynGjFPnG5Cxy2MXj4MSpFr6RAlQ';
   // Calculate New Worth
@@ -358,62 +378,119 @@ return (
     <Grid templateColumns="2fr 2fr" gap={6}>
       {/* Left Top: Portfolio Performance Chart */}
       <Box>
-        <Heading size="md" p={3} >Portfolio</Heading>
+        <Heading size="md" p={3}>Portfolio</Heading>
         <PortfolioPerformanceChart historicalData={historicalData} />
       </Box>
 
-      {/* Right Top: Bitcoin and Ethereum Boxes and Net Worth displayed horizontally */}
-      <Box>
-      <Heading size="md" p={3} >Your Assests</Heading>
-      <HStack spacing={5} align="stretch">
-      
-        {[{
-          logo: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png',
-          price: bitcoinPrice,
-          change: bitcoinChange,
-          label: 'Bitcoin Price',
-          sparkline: 'https://s3.coinmarketcap.com/generated/sparklines/web/7d/2781/1.svg'
-        }, {
-          logo: 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
-          price: ethereumPrice,
-          change: ethereumChange,
-          label: 'Ethereum Price',
-          sparkline: 'https://s3.coinmarketcap.com/generated/sparklines/web/7d/2781/1027.svg'
-        }, {
-          logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Apple_Wallet_Icon.svg/2560px-Apple_Wallet_Icon.svg.png',
-          label: 'Net Worth',
-          value: netWorth
-        }].map((item, index) => (
-          <Box
-            key={index}
-            p={5}
-            shadow="sm"
-            borderWidth="1px"
-            borderRadius="2xl"
-            bg={useColorModeValue('white', 'gray.800')}
-            flex={1}
+      {/* Right Top: Assets Display */}
+      <Flex direction="column" justify="center" align="center" flex="1">
+        <Flex direction="row" justify="space-between" align="center" w="100%" mb={4}>
+          <Button
+            onClick={() => setShowHighlightedTransactions(!showHighlightedTransactions)}
+            leftIcon={showHighlightedTransactions ? <ChevronLeftIcon /> : <ChevronRightIcon />}
           >
-            <VStack>
-              {item.logo && <Image src={item.logo} alt={`${item.label} Logo`} boxSize="50px" mr={3} />}
-              <Stat>
-                <StatLabel fontSize="sm" textAlign="center">{item.label}</StatLabel>
-                <StatNumber fontSize="2xl" textAlign="center">{item.price ? `$${item.price}` : `$${item.value ? parseFloat(item.value).toFixed(2) : '...'}`}</StatNumber>
-                {item.change && <StatNumber fontSize="2xl" textAlign="center">{parseFloat(item.change).toFixed(2)}%</StatNumber>}
-                <StatHelpText textAlign="center">{item.price ? 'As of now' : 'As for now'}</StatHelpText>
-                {item.sparkline && (
-                  <>
-                    <Image src={item.sparkline} alt={`${item.label} 7d price graph`} loading="lazy"/>
-                    <StatHelpText textAlign="center">Last 7 Days</StatHelpText>
-                  </>
-                )}
-              </Stat>
-            </VStack>
-          </Box>
-        ))}
-      </HStack>
-      </Box>
-    </Grid>
+            {showHighlightedTransactions ? 'Your Assets' : 'Highlighted Transactions'}
+          </Button>
+          <Switch
+            isChecked={showHighlightedTransactions}
+            onChange={() => setShowHighlightedTransactions(!showHighlightedTransactions)}
+          />
+        </Flex>
 
+        {showHighlightedTransactions ? (
+         <Box w="100%" borderWidth="1px" borderRadius="lg" overflow="hidden" shadow="lg">
+          <Heading size="md" p={4} borderBottom="1px solid" borderColor="gray.200" textAlign="center">Highlighted Transactions</Heading>
+          {highlightedTransactions.length > 0 ? (
+            <Table variant="striped" colorScheme="gray">
+            <Thead>
+                <Tr>
+                  <Th>Hash</Th>
+                  <Th isNumeric>Gas used</Th>
+                  <Th>Date</Th>
+                  <Th>Status</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {highlightedTransactions.map(({ tx, key }) => (
+                  <Tr key={key}>
+                    <Td>{getEllipsisTxt(tx?.hash)}</Td>
+                    <Td isNumeric>{tx?.gasUsed?.toString()}</Td>
+                    <Td>{tx?.blockTimestamp ? new Date(tx.blockTimestamp).toLocaleDateString() : ''}</Td>
+                    <Td>{tx?.receiptStatus}</Td>
+                  </Tr>
+                ))}
+              </Tbody>
+
+            </Table>
+          ) : (
+            <Box p={4}>
+              <Text>No highlighted transactions.</Text>
+            </Box>
+          )}
+        </Box>
+        ) : (
+          <HStack spacing={5} align="stretch">
+            {[
+              {
+                logo: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png',
+                price: bitcoinPrice,
+                change: bitcoinChange,
+                label: 'Bitcoin Price',
+                sparkline: 'https://s3.coinmarketcap.com/generated/sparklines/web/7d/2781/1.svg',
+              },
+              {
+                logo: 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
+                price: ethereumPrice,
+                change: ethereumChange,
+                label: 'Ethereum Price',
+                sparkline: 'https://s3.coinmarketcap.com/generated/sparklines/web/7d/2781/1027.svg',
+              },
+              {
+                logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Apple_Wallet_Icon.svg/2560px-Apple_Wallet_Icon.svg.png',
+                label: 'Net Worth',
+                value: netWorth,
+              },
+            ].map((item, index) => (
+              <Box
+                key={index}
+                p={5}
+                shadow="sm"
+                borderWidth="1px"
+                borderRadius="2xl"
+                bg={useColorModeValue('white', 'gray.800')}
+                flex={1}
+              >
+                <VStack spacing={4} align="center">
+                  {item.logo && <Image src={item.logo} alt={`${item.label} Logo`} boxSize="50px" />}
+                  <Stat>
+                    <StatLabel fontSize="sm" textAlign="center">
+                      {item.label}
+                    </StatLabel>
+                    <StatNumber fontSize="2xl" textAlign="center">
+                      {item.price ? `$${item.price}` : `$${item.value ? parseFloat(item.value).toFixed(2) : '...'}`}
+                    </StatNumber>
+                    {item.change && (
+                      <StatNumber fontSize="2xl" textAlign="center" color={item.change >= 0 ? 'green.500' : 'red.500'}>
+                        {parseFloat(item.change).toFixed(2)}%
+                      </StatNumber>
+                    )}
+                    <StatHelpText textAlign="center">{item.price ? 'As of now' : 'As for now'}</StatHelpText>
+                    {item.sparkline && (
+                      <>
+                        <Image src={item.sparkline} alt={`${item.label} 7d price graph`} loading="lazy" />
+                        <StatHelpText textAlign="center">Last 7 Days</StatHelpText>
+                      </>
+                    )}
+                  </Stat>
+                </VStack>
+              </Box>
+            ))}
+          </HStack>
+         )}
+      </Flex>
+     </Grid>
+
+    {/* Bottom: Token List and Pie Chart */}
     <Grid templateColumns="3fr 2fr" gap={6} mt={6}>
       {/* Left Bottom: Token List */}
       <Box>
@@ -424,7 +501,7 @@ return (
           </Flex>
           {pageTokens.map((token, index) => (
             <Flex key={index} bg={hoverTrColor} p={4} mb={2} borderRadius="lg" align="center">
-              <Image src={token.token_logo} alt={`${token.token_name} Logo`} boxSize="30px" mr={4}/>
+              <Image src={token.token_logo} alt={`${token.token_name} Logo`} boxSize="30px" mr={4} />
               <Box flex="1">
                 <Text fontWeight="bold">{token.token_name} ({token.token_symbol})</Text>
                 <Text>Price: ${parseFloat(token.price_usd).toFixed(2)} - 24h Change: {parseFloat(token.price_24h_percent_change).toFixed(2)}%</Text>

@@ -6,6 +6,7 @@ import {
 } from '@chakra-ui/react';
 import { MdCheckCircle, MdTrendingUp, MdTrendingDown } from 'react-icons/md';
 import axios from 'axios';
+import CoinPriceChart from './CoinPriceChart';
 
 const Test = () => {
   const [coinsData, setCoinsData] = useState([]);
@@ -157,6 +158,9 @@ const Test = () => {
                 Next
               </Button>
             </Flex>
+            <Box>
+              <CoinPriceChart coinDetails={coinDetails} />
+            </Box>
           </Box>
   
           {/* Widget and History */}

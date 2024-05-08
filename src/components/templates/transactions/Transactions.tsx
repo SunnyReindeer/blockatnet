@@ -11,8 +11,6 @@ import {
   Box,
   Link,
   useColorModeValue,
-  Flex,
-  useDisclosure,
 } from '@chakra-ui/react';
 import { ExternalLinkIcon, StarIcon } from '@chakra-ui/icons';
 import { useEvmWalletTransactions } from '@moralisweb3/next';
@@ -33,7 +31,6 @@ const Transactions = () => {
   const [highlightedTransactions, setHighlightedTransactions] = useState([]);
 
   useEffect(() => {
-    console.log('transactions: ', transactions);
     // Load highlighted transactions from cookies
     const savedHighlightedTransactions = Cookies.get('highlightedTransactions');
     if (savedHighlightedTransactions) {
@@ -41,15 +38,22 @@ const Transactions = () => {
     }
   }, [transactions]);
 
-  const handleStarClick = (index) => {
-    if (highlightedTransactions.includes(index)) {
-      setHighlightedTransactions(highlightedTransactions.filter((i) => i !== index));
+  const handleStarClick = (tx, key) => {
+    const isHighlighted = highlightedTransactions.some((t) => t.key === key);
+    if (isHighlighted) {
+      // 從 highlightedTransactions 中移除該筆交易紀錄
+      setHighlightedTransactions(highlightedTransactions.filter((t) => t.key !== key));
+      // 從 Cookies 中刪除該筆交易的記錄
+      const updatedHighlightedTransactions = highlightedTransactions.filter((t) => t.key !== key);
+      Cookies.set('highlightedTransactions', JSON.stringify(updatedHighlightedTransactions));
     } else {
-      setHighlightedTransactions([...highlightedTransactions, index]);
+      // 新增該筆交易到 highlightedTransactions
+      setHighlightedTransactions([...highlightedTransactions, { tx, key }]);
+      // 將更新後的 highlightedTransactions 資料保存到 Cookies 中
+      Cookies.set('highlightedTransactions', JSON.stringify([...highlightedTransactions, { tx, key }]));
     }
-    // Save highlighted transactions to cookies
-    Cookies.set('highlightedTransactions', JSON.stringify([...highlightedTransactions, index]));
   };
+
 
   return (
     <>
@@ -77,10 +81,10 @@ const Transactions = () => {
                     key={key}
                     _hover={{ bgColor: hoverTrColor }}
                     cursor="pointer"
-                    bgColor={highlightedTransactions.includes(key) ? 'yellow.400' : 'transparent'}
+                    bgColor={highlightedTransactions.some((t) => t.key === key) ? 'yellow.400' : 'transparent'}
                   >
-                    <Td onClick={() => handleStarClick(key)}>
-                      <StarIcon color={highlightedTransactions.includes(key) ? 'yellow.500' : 'gray.400'} />
+                    <Td onClick={() => handleStarClick(tx, key)}>
+                      <StarIcon color={highlightedTransactions.some((t) => t.key === key) ? 'yellow.500' : 'gray.400'} />
                     </Td>
                     <Td>
                       {getEllipsisTxt(tx?.hash)}
@@ -88,9 +92,9 @@ const Transactions = () => {
                     </Td>
                     <Td>{getEllipsisTxt(tx?.from.checksum)}</Td>
                     <Td>{getEllipsisTxt(tx?.to?.checksum)}</Td>
-                    <Td>{tx.gasUsed.toString()}</Td>
-                    <Td>{new Date(tx.blockTimestamp).toLocaleDateString()}</Td>
-                    <Td isNumeric>{tx.receiptStatus}</Td>
+                    <Td>{tx?.gasUsed?.toString()}</Td>
+                    <Td>{tx?.blockTimestamp ? new Date(tx.blockTimestamp).toLocaleDateString() : '-'}</Td>
+                    <Td isNumeric>{tx?.receiptStatus}</Td>
                   </Tr>
                 ))}
               </Tbody>
