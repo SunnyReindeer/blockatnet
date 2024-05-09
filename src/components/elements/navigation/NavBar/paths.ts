@@ -11,6 +11,10 @@ const NAV_LINKS: ISubNav[] = [
 
       },
       {
+        label: 'Cryptocurrencies',
+        href: '/Cryptocurrencies',
+      },
+      {
         label: 'Transactions',
         href: '/transactions',
 
@@ -48,10 +52,6 @@ const NAV_LINKS: ISubNav[] = [
   {
     label: 'Alert',
     href: '/alert',
-  },
-  {
-    label: 'Test',
-    href: '/test',
   },
 ];
 

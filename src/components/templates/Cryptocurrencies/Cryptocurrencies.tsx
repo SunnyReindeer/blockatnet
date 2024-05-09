@@ -8,7 +8,7 @@ import { MdCheckCircle, MdTrendingUp, MdTrendingDown } from 'react-icons/md';
 import axios from 'axios';
 import CoinPriceChart from './CoinPriceChart';
 
-const Test = () => {
+const Cryptocurrencies = () => {
   const [coinsData, setCoinsData] = useState([]);
   const [coinDetails, setCoinDetails] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -221,4 +221,4 @@ const Test = () => {
   );
 };
 
-export default Test;
+export default Cryptocurrencies;

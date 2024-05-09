@@ -78,7 +78,7 @@ const Home = () => {
   }, []);
   
   
-  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjI5N2Y2Mjc1LWVhZDQtNDNiOC04MmU2LWQyOTc2NDFkODdlYiIsIm9yZ0lkIjoiMzg0NjAyIiwidXNlcklkIjoiMzk1MTc2IiwidHlwZUlkIjoiZmZhOWY5NjAtZjZjMy00Y2JhLThhYTgtNWNhYzNkMTFkMGJmIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MTEzNTQ1MTksImV4cCI6NDg2NzExNDUxOX0.h9-OeF5VKg4jPHXylfBaXphHk_Hm1ljzxYEDPtlx_BU';
+  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImRmNWRkNTA0LTllOWItNDVlZS05MGExLWY2ZDZjMTAxNDYyOSIsIm9yZ0lkIjoiMzY1MzU4IiwidXNlcklkIjoiMzc1NDk0IiwidHlwZUlkIjoiZGZkMDYwZWItY2VkZS00OTMzLWFiZDktNmVlYTljYzZmNzNkIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MDA2MzI0NTQsImV4cCI6NDg1NjM5MjQ1NH0.koDD5b4MbMOlzVr74U9yH-J1b6GJtMs766J-ZxaGT0k';
   // Calculate New Worth
   const fetchNetWorth = async () => {
     const address = data?.user?.address;
