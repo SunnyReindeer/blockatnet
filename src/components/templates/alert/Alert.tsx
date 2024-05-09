@@ -28,6 +28,8 @@ import axios from 'axios';
 import detectEthereumProvider from '@metamask/detect-provider';
 import emailjs from '@emailjs/browser';
 import app from './firebase';
+import { v4 as uuidv4 } from 'uuid';
+import { toast } from 'react-toastify'; // Add react-toastify for in-app notifications
 
 const database = app.database();
 const alertsRef = database.ref('activeAlerts');
@@ -101,7 +103,7 @@ const Alert = () => {
         }
       } catch (error) {
         console.error(error);
-        // Display error message to the user
+        toast.error('Error connecting to blockchain'); // Display error message using toast
       }
     };
 
@@ -133,46 +135,44 @@ const Alert = () => {
   }, [thresholds]);
 
   const createAlert = (crypto, threshold) => {
-    const newThresholdAlert = { crypto, threshold };
+    const newThresholdAlert = { crypto, threshold, id: uuidv4() }; // generate a unique ID
     alertsRef.push(newThresholdAlert);
   };
 
-  const removeAlert = (alertToRemove) => {
-    const alertsQuery = alertsRef.orderByChild('crypto').equalTo(alertToRemove.crypto);
-    alertsQuery.once('value', (snapshot) => {
-      snapshot.forEach((childSnapshot) => {
-        childSnapshot.ref.remove();
-      });
-    });
-  };
 
   useEffect(() => {
     const unsubscribe = alertsRef.on('value', (snapshot) => {
       if (snapshot && snapshot.exists()) {
         const alerts = [];
         snapshot.forEach((childSnapshot) => {
-          alerts.push(childSnapshot.val());
+          alerts.push({...childSnapshot.val(), key: childSnapshot.key }); // add the key to each alert
         });
         setActiveAlerts(alerts);
       } else {
         setActiveAlerts([]);
       }
     });
-
+  
     return () => unsubscribe();
   }, []);
+  
+  const removeAlert = (alertToRemove) => {
+    alertsRef.child(alertToRemove.key).remove();
+    setAlertCount(alertCount - 1); // Decrement alertCount when an alert is removed
+  };
 
   const handleThresholdChange = async () => {
     if (selectedCrypto && threshold && isValidEmail(userEmail) && web3 && userAccount) {
-      if (alertCount < 3) { // Check if the user has already created 3 alerts
+      if (activeAlerts.length < 3) { // Check if the user has already created 3 alerts
         setThresholds((prevThresholds) => ({...prevThresholds, [selectedCrypto]: parseFloat(threshold) }));
-
+  
         const newThresholdAlert: AlertData = { crypto: selectedCrypto, threshold: parseFloat(threshold) };
         createAlert(selectedCrypto, parseFloat(threshold));
         sendEmailOnThresholdChange(selectedCrypto, newThresholdAlert);
-        setAlertCount(alertCount + 1); // Increment the alert count
+        setAlertCount(activeAlerts.length + 1);
+        toast.success('Alert created successfully!'); // Display success message using toast
       } else {
-        alert("You have already created 3 alerts. Please remove some alerts to create new ones.");
+        toast.error('You have already created 3 alerts. Please remove some alerts to create new ones.'); // Display error message using toast
       }
     }
   };
@@ -199,21 +199,25 @@ const Alert = () => {
 
   const sendEmailOnThresholdChange = (crypto, thresholdAlert) => {
     const emailTemplateParams = {
+      to_email: userEmail, // Set to_email to the user's email address
       to_name: userEmail,
+      from_email: 'cheunhhoyin@gmail.com', // Set from_email to a valid sender email address
       message: `Alert created successfully! You will receive notifications when ${crypto} reaches $${thresholdAlert.threshold}`,
     };
-
+    
     sendEmail(emailTemplateParams);
   };
-
+  
   const sendEmailOnThresholdReach = (crypto, currentPrice, threshold) => {
     const emailTemplateParams = {
+      to_email: userEmail, // Set to_email to the user's email address
+      to_name: userEmail,
+      from_email: 'cheunhoyin@gmail.com', // Set from_email to a valid sender email address
       crypto,
       currentPrice,
       threshold,
-      to_name: userEmail,
     };
-
+    
     sendEmail(emailTemplateParams);
   };
 
@@ -280,7 +284,7 @@ const Alert = () => {
                 </Thead>
                 <Tbody>
                   {activeAlerts.map((alert) => (
-                    <Tr key={alert.crypto}>
+                    <Tr key={alert.id}>
                       <Td>{alert.crypto.toUpperCase()}</Td>
                       <Td>${alert.threshold}</Td>
                       <Td>
