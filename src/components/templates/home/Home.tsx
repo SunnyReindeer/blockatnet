@@ -73,12 +73,12 @@ const Home = () => {
     const savedHighlightedTransactions = Cookies.get('highlightedTransactions');
     if (savedHighlightedTransactions && savedHighlightedTransactions.trim() !== '') {
       setHighlightedTransactions(JSON.parse(savedHighlightedTransactions));
-      setShowHighlightedTransactions(true); // 設置 showHighlightedTransactions 的初始值
+      setShowHighlightedTransactions(false); 
     }
   }, []);
   
   
-  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImRmNWRkNTA0LTllOWItNDVlZS05MGExLWY2ZDZjMTAxNDYyOSIsIm9yZ0lkIjoiMzY1MzU4IiwidXNlcklkIjoiMzc1NDk0IiwidHlwZUlkIjoiZGZkMDYwZWItY2VkZS00OTMzLWFiZDktNmVlYTljYzZmNzNkIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MDA2MzI0NTQsImV4cCI6NDg1NjM5MjQ1NH0.koDD5b4MbMOlzVr74U9yH-J1b6GJtMs766J-ZxaGT0k';
+  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImQ3ZDY2NWQzLTIyNDYtNDQ3Ni1iYmE2LTdkOWViZmI5OTkzYyIsIm9yZ0lkIjoiMzY0ODg4IiwidXNlcklkIjoiMzc1MDEwIiwidHlwZUlkIjoiMDNmYTExNTMtZmYzOC00ZjU3LTg4YTItMTk4MGVlMWQwZWUzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MDAzMTUzMTAsImV4cCI6NDg1NjA3NTMxMH0.6heL_EFvR_PN7kN0lsL9g1kTzpK12q0rxpAn0JZuG_8';
   // Calculate New Worth
   const fetchNetWorth = async () => {
     const address = data?.user?.address;
@@ -523,8 +523,8 @@ return (
       </Box>
 
       {/* Right Bottom: Pie Chart */}
-      <Box>
-        {tokens.length > 0 && <Pie data={chartData} key="unique-key" />}
+      <Box  width='500px' height='500px'>
+        {tokens.length > 0 && <Pie  data={chartData} key="unique-key" />}
       </Box>
     </Grid>
   </Flex>
