@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { Input, Flex, Box, useToast, Text, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Button, InputGroup, InputRightElement, Switch, FormControl, FormLabel } from '@chakra-ui/react';
@@ -48,8 +49,7 @@ const Track = () => {
   };
 
 
-  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImVhYTg0YTFjLTY0Y2QtNDFmMS1iNGJmLTc2Nzc5NGM1YmI0ZSIsIm9yZ0lkIjoiMzY1MzU2IiwidXNlcklkIjoiMzc1NDkyIiwidHlwZUlkIjoiMGU2NDIxN2MtNzg2OS00MTc5LThhNWItM2YyNDhkZmY2NzU3IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MDA2MzIyMjYsImV4cCI6NDg1NjM5MjIyNn0.DylRjEqP-V0hBx09pJl75NYY1gAWvWf_wq4j2RerLkQ';
-
+  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjU5ZTQ5YWYyLTkwMTAtNGIwMi1iMTU0LWU5YWFhNTNiMjgyMiIsIm9yZ0lkIjoiMzg0NjA1IiwidXNlcklkIjoiMzk1MTc5IiwidHlwZUlkIjoiMWUzOGMxOWItNTljNi00MWRjLWE2NzAtNTdkOTExZjM2YjQ2IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MTEzNTY0MzUsImV4cCI6NDg2NzExNjQzNX0.-qwxoVBF8ZnqFKYGLua3zkgp8iuLR-3rguHLeytEg8o';
   // Fetch transaction history from Moralis API
   const fetchTransactionHistory = async (address) => {
     const url = `https://deep-index.moralis.io/api/v2.2/wallets/${address}/history?chain=eth&from_date=${fromDate}&to_date=${toDate}&include_internal_transactions=true&nft_metadata=true&order=DESC`;
@@ -88,57 +88,18 @@ const Track = () => {
           return acc; // Skip adding this transaction if we can't resolve a real address
         }
       }
-      
+
       // Similar handling could be added for to_address if necessary
       if (tx.to_address === "0x0000000000000000000000000000000000000000" && tx.erc20_transfers && tx.erc20_transfers.length > 0) {
         tx.to_address = tx.erc20_transfers[0].to_address;
       }
-  
+
       acc.push(tx);
       return acc;
     }, []);
     setTransactions(processed);
     updateGraph(processed);
   };
-
-  const handleNodeClick = useCallback((node) => {
-    console.log("Node clicked:", node);
-
-    setClickedNodeId(node.id);
-
-    const relatedTransactions = transactions.filter(tx =>
-      tx.from_address === node.id || tx.to_address === node.id
-    );
-
-    if (relatedTransactions.length > 0) {
-      const totalInteractions = transactions.length;
-      const interactionCount = relatedTransactions.length;
-      const interactionPercentage = (interactionCount / totalInteractions * 100).toFixed(2);
-
-      setInteractionDetails({
-        address: node.id,
-        interactionCount,
-        interactionPercentage
-      });
-
-      setSelectedNode({
-        address: node.id,
-        transactions: relatedTransactions.map(tx => ({
-          ...tx,
-          transactionFeeEth: ethers.utils.formatEther(ethers.BigNumber.from(tx.gas_price).mul(tx.gas))
-        }))
-      });
-
-    } else {
-      setInteractionDetails(null);
-      setSelectedNode(null);
-    }
-  }, [transactions, isLocked]); 
-
-
-
-
-
 
   // Update graph visualization
   useEffect(() => {
@@ -148,49 +109,40 @@ const Track = () => {
     }
   }, [transactions, svgRef.current]);
 
-
-
-  
-
   // Update graph visualization
   const updateGraph = (transactions) => {
     if (!svgRef.current) return;
-
-
+  
     d3.select(svgRef.current).selectAll("*").remove();
-
+  
     const width = svgRef.current.clientWidth;
     const height = svgRef.current.clientHeight;
-
-    // Setup nodes and links
+  
     const nodeIds = new Set(transactions.flatMap(tx => [`${tx.from_address}`, `${tx.to_address}`]));
     const nodes = Array.from(nodeIds).map(id => ({ id }));
     const links = transactions.map(tx => ({
       source: `${tx.from_address}`,
       target: `${tx.to_address}`
     }));
-
-    // Setup simulation
-    const simulation = d3.forceSimulation(nodes)
-      .force("link", d3.forceLink(links).id(d => d.id))
-      .force("charge", d3.forceManyBody().strength(-400))
-      .force("center", d3.forceCenter(width / 2, height / 2));
-
+  
     const svg = d3.select(svgRef.current)
-      .call(d3.zoom().on("zoom", (event) => {
+      .append('g')
+      .call(d3.zoom().scaleExtent([1 / 2, 8]).on("zoom", (event) => {
         svg.attr("transform", event.transform);
-      }))
-      .append('g');
-
-    // Draw links
+      }));
+  
     svg.append("g")
       .attr("stroke", "#999")
       .attr("stroke-opacity", 0.6)
       .selectAll("line")
       .data(links)
       .enter().append("line");
-
-    // Draw nodes
+  
+    const simulation = d3.forceSimulation(nodes)
+      .force("link", d3.forceLink(links).id(d => d.id))
+      .force("charge", d3.forceManyBody().strength(-400))
+      .force("center", d3.forceCenter(width / 2, height / 2));
+  
     const node = svg.append("g")
       .attr("stroke", "#fff")
       .attr("stroke-width", 1.5)
@@ -199,59 +151,91 @@ const Track = () => {
       .enter().append("circle")
       .attr("r", d => d.id === sessionData?.user?.address ? 10 : (d.id === clickedNodeId ? 6 : 5))
       .attr("fill", d => d.id === clickedNodeId ? "green" : "blue")
-      .on("click", handleNodeClick)
+      .on("click", (event, d) => handleNodeClick(event, d))
       .call(d3.drag()
-        .on("start", dragstarted)
+        .on("start", (event, d) => dragstarted(event, d, simulation))
         .on("drag", dragged)
-        .on("end", dragended));
-
-    if (isLocked) {
-      node.on("click", null); 
-    } else {
-      node.on("click", (event, d) => handleNodeClick(d));
-    }
-
+        .on("end", (event, d) => dragended(event, d, simulation)));
+  
     node.append("title").text(d => d.id);
-
+  
     simulation.on("tick", () => {
       svg.selectAll("line")
         .attr("x1", d => d.source.x)
         .attr("y1", d => d.source.y)
         .attr("x2", d => d.target.x)
         .attr("y2", d => d.target.y);
-
+  
       node
         .attr("cx", d => d.x)
         .attr("cy", d => d.y);
     });
-
-    function dragstarted(event, d) {
+  
+    function dragstarted(event, d, simulation) {
       if (!event.active) simulation.alphaTarget(0.3).restart();
       d.fx = d.x;
       d.fy = d.y;
     }
-
+  
     function dragged(event, d) {
       d.fx = event.x;
       d.fy = event.y;
     }
-
-    function dragended(event, d) {
+  
+    function dragended(event, d, simulation) {
       if (!event.active) simulation.alphaTarget(0);
       d.fx = null;
       d.fy = null;
     }
   };
+  
 
+
+  
+  const handleNodeClick = useCallback((event, node) => {
+    console.log("Node clicked:", node);
+  
+    setClickedNodeId(node.id);
+  
+    // Change node color immediately on click
+    d3.select(event.currentTarget)
+      .attr('fill', 'green');  // This sets the color of the clicked node to green
+  
+    const relatedTransactions = transactions.filter(tx =>
+      tx.from_address === node.id || tx.to_address === node.id
+    );
+  
+    if (relatedTransactions.length > 0) {
+      const totalInteractions = transactions.length;
+      const interactionCount = relatedTransactions.length;
+      const interactionPercentage = (interactionCount / totalInteractions * 100).toFixed(2);
+  
+      setInteractionDetails({
+        address: node.id,
+        interactionCount,
+        interactionPercentage
+      });
+  
+      setSelectedNode({
+        address: node.id,
+        transactions: relatedTransactions.map(tx => ({
+          ...tx,
+          transactionFeeEth: ethers.utils.formatEther(ethers.BigNumber.from(tx.gas_price).mul(tx.gas))
+        }))
+      });
+  
+    } else {
+      setInteractionDetails(null);
+      setSelectedNode(null);
+    }
+  }, [transactions, isLocked]);
+  
 
   useEffect(() => {
     if (transactions.length > 0) {
       updateGraph(transactions);
     }
-  }, [transactions, svgRef.current, isLocked]); 
-
-
-
+  }, [transactions, svgRef.current, isLocked]);
 
   return (
     <Flex>
@@ -326,6 +310,5 @@ const Track = () => {
     </Flex>
   );
 };
-
 
 export default Track;
