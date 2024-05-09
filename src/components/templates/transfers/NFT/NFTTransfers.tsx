@@ -10,20 +10,16 @@ import {
   Heading,
   Box,
   useColorModeValue,
-  Flex,
-  Icon,
-  Text,
   Button,
   Tooltip,
+  Icon,
 } from '@chakra-ui/react';
 import { useEvmWalletNFTTransfers } from '@moralisweb3/next';
 import { useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { getEllipsisTxt } from 'utils/format';
 import { useNetwork } from 'wagmi';
-import { FaStar, FaExternalLinkAlt } from 'react-icons/fa';
-import Cookies from 'js-cookie';
-import { useRouter } from 'next/router';
+import { FaExternalLinkAlt } from 'react-icons/fa';
 
 const NFTTransfers = () => {
   const hoverTrColor = useColorModeValue('gray.100', 'gray.700');
@@ -33,43 +29,12 @@ const NFTTransfers = () => {
     address: data?.user?.address,
     chain: chain?.id,
   });
-  const [highlightedTransfers, setHighlightedTransfers] = useState([]);
-  const [pinnedTransfers, setPinnedTransfers] = useState([]);
-  const router = useRouter();
 
-  useEffect(() => {
-    console.log('transfers: ', transfers);
-    // Load highlighted and pinned transfers from cookies
-    const savedHighlightedTransfers = Cookies.get('highlightedNFTTransfers');
-    const savedPinnedTransfers = Cookies.get('pinnedNFTTransfers');
-    if (savedHighlightedTransfers) {
-      setHighlightedTransfers(JSON.parse(savedHighlightedTransfers));
-    }
-    if (savedPinnedTransfers) {
-      setPinnedTransfers(JSON.parse(savedPinnedTransfers));
-    }
-  }, [transfers]);
+  useEffect(() => console.log('transfers: ', transfers), [transfers]);
 
-  const handleStarClick = (index) => {
-    if (highlightedTransfers.includes(index)) {
-      setHighlightedTransfers(highlightedTransfers.filter((i) => i !== index));
-    } else {
-      setHighlightedTransfers([...highlightedTransfers, index]);
-    }
-    // Save highlighted transfers to cookies
-    Cookies.set('highlightedNFTTransfers', JSON.stringify([...highlightedTransfers, index]));
-  };
-
-  const handlePinClick = (index) => {
-    if (pinnedTransfers.includes(index)) {
-      setPinnedTransfers(pinnedTransfers.filter((i) => i !== index));
-    } else {
-      setPinnedTransfers([...pinnedTransfers, index]);
-    }
-    // Save pinned transfers to cookies
-    Cookies.set('pinnedNFTTransfers', JSON.stringify([...pinnedTransfers, index]));
-    // Redirect to pinned transfers page
-    router.push('/pinned-nft-transfers');
+  const handleTransferClick = (transactionHash) => {
+    const etherscanBaseUrl = `https://etherscan.io/tx/`;
+    window.open(`${etherscanBaseUrl}${transactionHash}`, '_blank');
   };
 
   return (
@@ -83,7 +48,6 @@ const NFTTransfers = () => {
             <Table>
               <Thead>
                 <Tr>
-                  <Th></Th>
                   <Th>Token</Th>
                   <Th>Token Id</Th>
                   <Th>From</Th>
@@ -100,24 +64,7 @@ const NFTTransfers = () => {
                     key={key}
                     _hover={{ bgColor: hoverTrColor }}
                     cursor="pointer"
-                    bgColor={
-                      highlightedTransfers.includes(key)
-                        ? 'yellow.400'
-                        : pinnedTransfers.includes(key)
-                        ? 'blue.200'
-                        : 'transparent'
-                    }
                   >
-                    <Td onClick={() => handleStarClick(key)}>
-                      <Flex alignItems="center">
-                        <Icon
-                          as={FaStar}
-                          color={highlightedTransfers.includes(key) ? 'yellow.500' : 'gray.400'}
-                          mr={2}
-                        />
-                        <Text>{highlightedTransfers.includes(key) ? 'Marked' : 'Mark'}</Text>
-                      </Flex>
-                    </Td>
                     <Td>{getEllipsisTxt(transfer?.tokenAddress.checksum)}</Td>
                     <Td>{transfer?.tokenId}</Td>
                     <Td>{getEllipsisTxt(transfer?.fromAddress?.checksum)}</Td>
@@ -126,11 +73,11 @@ const NFTTransfers = () => {
                     <Td>{new Date(transfer.blockTimestamp).toLocaleDateString()}</Td>
                     <Td isNumeric>{getEllipsisTxt(transfer.transactionHash, 2)}</Td>
                     <Td>
-                      <Tooltip label="Pin Transfer">
+                      <Tooltip label="View on Etherscan">
                         <Button
                           size="sm"
-                          colorScheme={pinnedTransfers.includes(key) ? 'blue' : 'gray'}
-                          onClick={() => handlePinClick(key)}
+                          colorScheme="gray"
+                          onClick={() => handleTransferClick(transfer.transactionHash)}
                         >
                           <Icon as={FaExternalLinkAlt} />
                         </Button>
@@ -141,7 +88,6 @@ const NFTTransfers = () => {
               </Tbody>
               <Tfoot>
                 <Tr>
-                  <Th></Th>
                   <Th>Token</Th>
                   <Th>Token Id</Th>
                   <Th>From</Th>
