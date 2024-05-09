@@ -29,7 +29,8 @@ import detectEthereumProvider from '@metamask/detect-provider';
 import emailjs from '@emailjs/browser';
 import app from './firebase';
 import { v4 as uuidv4 } from 'uuid';
-import { toast } from 'react-toastify'; // Add react-toastify for in-app notifications
+import { toast,ToastContainer } from 'react-toastify'; // Add react-toastify for in-app notifications
+import 'react-toastify/dist/ReactToastify.css';
 
 const database = app.database();
 const alertsRef = database.ref('activeAlerts');
@@ -170,9 +171,27 @@ const Alert = () => {
         createAlert(selectedCrypto, parseFloat(threshold));
         sendEmailOnThresholdChange(selectedCrypto, newThresholdAlert);
         setAlertCount(activeAlerts.length + 1);
-        toast.success('Alert created successfully!'); // Display success message using toast
+        toast.success('Alert created successfully!', {
+          position: 'top-right',
+          autoClose: 5000,
+          hideProgressBar: true,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          style: notificationStyle, // Apply custom style
+        }); // Display success notification
       } else {
-        toast.error('You have already created 3 alerts. Please remove some alerts to create new ones.'); // Display error message using toast
+        toast.error('You have already created 3 alerts. Please remove some alerts to create new ones.', {
+          position: 'top-right',
+          autoClose: 5000,
+          hideProgressBar: true,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          style: notificationStyle, // Apply custom style
+        }); // Display error notification
       }
     }
   };
@@ -189,9 +208,8 @@ const Alert = () => {
   const checkThresholds = (prices, thresholds) => {
     CRYPTOCURRENCIES.forEach((crypto) => {
       const currentPrice = prices[crypto].usd;
-     if (currentPrice >= thresholds[crypto]) {
-        console.log(`${crypto.toUpperCase()} price has reached $${thresholds[crypto]}`);
-
+      if (currentPrice >= thresholds[crypto]) {
+        toast.success(`${crypto.toUpperCase()} price has reached $${thresholds[crypto]}`);
         sendEmailOnThresholdReach(crypto, currentPrice, thresholds[crypto]);
       }
     });
@@ -232,6 +250,22 @@ const Alert = () => {
       });
   };
 
+  const notificationStyle = {
+    background: '#333',
+    color: '#fff',
+    fontFamily: 'Arial, sans-serif',
+    fontSize: '16px',
+    padding: '16px',
+    borderRadius: '8px',
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+  };
+
+  const notificationCloseButtonStyle = {
+    color: '#fff',
+    fontSize: '20px',
+    fontWeight: 'bold',
+  };
+  
   return (
     <ChakraProvider>
       <Box m={5}>
@@ -297,6 +331,7 @@ const Alert = () => {
             </Box>
           </GridItem>
         </Grid>
+        <ToastContainer />
       </Box>
     </ChakraProvider>
   );
