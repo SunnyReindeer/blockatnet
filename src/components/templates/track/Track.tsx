@@ -65,7 +65,7 @@ const Track = () => {
       const response = await fetch(url, options);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
-      processTransactions(data.result); // Processing to handle null addresses
+      processTransactions(data.result); 
     } catch (error) {
       console.error("Failed to fetch transaction history:", error);
       toast({
@@ -85,7 +85,7 @@ const Track = () => {
         if (tx.erc20_transfers && tx.erc20_transfers.length > 0) {
           tx.from_address = tx.erc20_transfers[0].from_address;
         } else {
-          return acc; // Skip adding this transaction if we can't resolve a real address
+          return acc; 
         }
       }
 
@@ -112,110 +112,121 @@ const Track = () => {
   // Update graph visualization
   const updateGraph = (transactions) => {
     if (!svgRef.current) return;
-  
+
     d3.select(svgRef.current).selectAll("*").remove();
-  
+
     const width = svgRef.current.clientWidth;
     const height = svgRef.current.clientHeight;
-  
+
     const nodeIds = new Set(transactions.flatMap(tx => [`${tx.from_address}`, `${tx.to_address}`]));
     const nodes = Array.from(nodeIds).map(id => ({ id }));
     const links = transactions.map(tx => ({
       source: `${tx.from_address}`,
-      target: `${tx.to_address}`
+      target: `${tx.to_address}`,
+      value: tx.value || 1, 
     }));
-  
+
     const svg = d3.select(svgRef.current)
-      .append('g')
-      .call(d3.zoom().scaleExtent([1 / 2, 8]).on("zoom", (event) => {
-        svg.attr("transform", event.transform);
-      }));
-  
-    svg.append("g")
+      .attr('width', width)
+      .attr('height', height);
+
+    const container = svg.append('g');
+
+    svg.call(d3.zoom().scaleExtent([0.5, 4]).on("zoom", (event) => {
+      container.attr("transform", event.transform);
+    }));
+
+    container.append("g")
       .attr("stroke", "#999")
       .attr("stroke-opacity", 0.6)
       .selectAll("line")
       .data(links)
       .enter().append("line");
-  
+
+    const linkForce = d3.forceLink(links)
+      .id(d => d.id)
+      .distance(d => 50); 
+
     const simulation = d3.forceSimulation(nodes)
-      .force("link", d3.forceLink(links).id(d => d.id))
+      .force("link", linkForce)
       .force("charge", d3.forceManyBody().strength(-400))
       .force("center", d3.forceCenter(width / 2, height / 2));
-  
-    const node = svg.append("g")
+
+    const node = container.append("g")
       .attr("stroke", "#fff")
       .attr("stroke-width", 1.5)
       .selectAll("circle")
       .data(nodes)
       .enter().append("circle")
-      .attr("r", d => d.id === sessionData?.user?.address ? 10 : (d.id === clickedNodeId ? 6 : 5))
+      .attr("r", 5)
       .attr("fill", d => d.id === clickedNodeId ? "green" : "blue")
       .on("click", (event, d) => handleNodeClick(event, d))
       .call(d3.drag()
         .on("start", (event, d) => dragstarted(event, d, simulation))
         .on("drag", dragged)
         .on("end", (event, d) => dragended(event, d, simulation)));
-  
+
     node.append("title").text(d => d.id);
-  
+
     simulation.on("tick", () => {
-      svg.selectAll("line")
+      container.selectAll("line")
         .attr("x1", d => d.source.x)
         .attr("y1", d => d.source.y)
         .attr("x2", d => d.target.x)
         .attr("y2", d => d.target.y);
-  
+
       node
         .attr("cx", d => d.x)
         .attr("cy", d => d.y);
     });
-  
+
     function dragstarted(event, d, simulation) {
       if (!event.active) simulation.alphaTarget(0.3).restart();
       d.fx = d.x;
       d.fy = d.y;
     }
-  
+
     function dragged(event, d) {
       d.fx = event.x;
       d.fy = event.y;
     }
-  
+
     function dragended(event, d, simulation) {
       if (!event.active) simulation.alphaTarget(0);
       d.fx = null;
       d.fy = null;
     }
   };
-  
 
-
-  
   const handleNodeClick = useCallback((event, node) => {
     console.log("Node clicked:", node);
-  
+
+    // Update the state to reflect the currently active (clicked) node
     setClickedNodeId(node.id);
-  
-    // Change node color immediately on click
+
+    // Reset all nodes to their default color
+    d3.select(svgRef.current).selectAll("circle")
+      .attr('fill', d => d.id === sessionData?.user?.address ? "blue" : "blue"); 
+
+    // Highlight the clicked node
     d3.select(event.currentTarget)
-      .attr('fill', 'green');  // This sets the color of the clicked node to green
-  
+      .attr('fill', 'green');  // Set the clicked node to green
+
     const relatedTransactions = transactions.filter(tx =>
       tx.from_address === node.id || tx.to_address === node.id
     );
-  
+
     if (relatedTransactions.length > 0) {
       const totalInteractions = transactions.length;
       const interactionCount = relatedTransactions.length;
       const interactionPercentage = (interactionCount / totalInteractions * 100).toFixed(2);
-  
+
       setInteractionDetails({
         address: node.id,
         interactionCount,
         interactionPercentage
       });
-  
+
       setSelectedNode({
         address: node.id,
         transactions: relatedTransactions.map(tx => ({
@@ -223,13 +234,14 @@ const Track = () => {
           transactionFeeEth: ethers.utils.formatEther(ethers.BigNumber.from(tx.gas_price).mul(tx.gas))
         }))
       });
-  
+
     } else {
       setInteractionDetails(null);
       setSelectedNode(null);
     }
-  }, [transactions, isLocked]);
-  
+  }, [transactions, isLocked, sessionData?.user?.address]);
+
+
 
   useEffect(() => {
     if (transactions.length > 0) {
@@ -242,6 +254,9 @@ const Track = () => {
       <Box flex="1" p={4} overflowY="auto" maxW="600px">
         <Box mb={4}>
           <Box mb={4}>
+            <Text fontSize="lg" fontWeight="bold" mb={2}>
+              Viewing Transactions for Address: {inputAddress || sessionData?.user?.address || 'Not set'}
+            </Text>
             <FormLabel htmlFor="from-date">From Date</FormLabel>
             <Input
               id="from-date"
