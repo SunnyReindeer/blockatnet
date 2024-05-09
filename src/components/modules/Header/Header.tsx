@@ -67,21 +67,6 @@ const Header = () => {
                 <EmailIcon boxSize={6} color="orange.500" />
               </Button>
             ))}
-            <Popover>
-              <PopoverTrigger>
-                <Button>
-                  <BellIcon boxSize={6} color="orange.500" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent>
-                <PopoverArrow />
-                <PopoverCloseButton />
-                <PopoverHeader>Notifications</PopoverHeader>
-                <PopoverBody>
-                  {/* Add your notification content here */}
-                </PopoverBody>
-              </PopoverContent>
-            </Popover>
             <ConnectButton />
             <ColorModeButton />
           </HStack>
