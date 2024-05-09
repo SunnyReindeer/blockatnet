@@ -11,50 +11,109 @@ import {
   Text,
 } from 'recharts';
 import moment from 'moment';
-import { Box, Heading, Button } from '@chakra-ui/react';
+import { Box, Heading, Button, Flex } from '@chakra-ui/react';
 
 const CoinPriceChart = ({ coinDetails }) => {
   const [chartData, setChartData] = useState([]);
   const [chartType, setChartType] = useState('price');
+  const [timeRange, setTimeRange] = useState('7d');
 
   useEffect(() => {
-    const data = coinDetails.map((item) => ({
+    let data = coinDetails.map((item) => ({
       timestamp: moment(item.timestamp).format('MMM DD, YYYY'),
       price: parseFloat(item.price.toFixed(2)),
       volume: parseFloat(item.vol_spot_24h.toFixed(2)),
       marketCap: parseFloat(item.market_cap.toFixed(2)),
     }));
+
+    // Filter data based on the selected time range
+    const endDate = moment();
+    if (timeRange === '7d') {
+      data = data.filter(item => moment(item.timestamp).isAfter(endDate.clone().subtract(7, 'days')));
+    } else if (timeRange === '30d') {
+      data = data.filter(item => moment(item.timestamp).isAfter(endDate.clone().subtract(30, 'days')));
+    } else if (timeRange === '90d') {
+      data = data.filter(item => moment(item.timestamp).isAfter(endDate.clone().subtract(90, 'days')));
+    } else if (timeRange === '180d') {
+      data = data.filter(item => moment(item.timestamp).isAfter(endDate.clone().subtract(180, 'days')));
+    } else if (timeRange === '1y') {
+      data = data.filter(item => moment(item.timestamp).isAfter(endDate.clone().subtract(360, 'days')));
+    }
+
     setChartData(data);
-  }, [coinDetails]);
+  }, [coinDetails, timeRange]);
 
   return (
     <Box>
       <Heading size="md" mb={4}>Coin Price Chart</Heading>
-      <Box display="flex" justifyContent="flex-end" mb={4}>
-        <Button
-          variant={chartType === 'price' ? 'solid' : 'outline'}
-          colorScheme="blue"
-          mr={2}
-          onClick={() => setChartType('price')}
-        >
-          Price
-        </Button>
-        <Button
-          variant={chartType === 'volume' ? 'solid' : 'outline'}
-          colorScheme="blue"
-          mr={2}
-          onClick={() => setChartType('volume')}
-        >
-          Volume
-        </Button>
-        <Button
-          variant={chartType === 'marketCap' ? 'solid' : 'outline'}
-          colorScheme="blue"
-          onClick={() => setChartType('marketCap')}
-        >
-          Market Cap
-        </Button>
-      </Box>
+      <Flex justifyContent="space-between" mb={4}>
+        <Box>
+          <Button
+            variant={chartType === 'price' ? 'solid' : 'outline'}
+            colorScheme="blue"
+            mr={2}
+            onClick={() => setChartType('price')}
+          >
+            Price
+          </Button>
+          <Button
+            variant={chartType === 'volume' ? 'solid' : 'outline'}
+            colorScheme="blue"
+            mr={2}
+            onClick={() => setChartType('volume')}
+          >
+            Volume
+          </Button>
+          <Button
+            variant={chartType === 'marketCap' ? 'solid' : 'outline'}
+            colorScheme="blue"
+            onClick={() => setChartType('marketCap')}
+          >
+            Market Cap
+          </Button>
+        </Box>
+        <Box>
+          <Button
+            variant={timeRange === '7d' ? 'solid' : 'outline'}
+            colorScheme="blue"
+            mr={2}
+            onClick={() => setTimeRange('7d')}
+          >
+            7 Days
+          </Button>
+          <Button
+            variant={timeRange === '30d' ? 'solid' : 'outline'}
+            colorScheme="blue"
+            mr={2}
+            onClick={() => setTimeRange('30d')}
+          >
+            30 Days
+          </Button>
+          <Button
+            variant={timeRange === '90d' ? 'solid' : 'outline'}
+            colorScheme="blue"
+            mr={2}
+            onClick={() => setTimeRange('90d')}
+          >
+            90 Days
+          </Button>
+          <Button
+            variant={timeRange === '180d' ? 'solid' : 'outline'}
+            colorScheme="blue"
+            mr={2}
+            onClick={() => setTimeRange('180d')}
+          >
+            180 Days
+          </Button>
+          <Button
+            variant={timeRange === '1y' ? 'solid' : 'outline'}
+            colorScheme="blue"
+            onClick={() => setTimeRange('1y')}
+          >
+            1 Year
+          </Button>
+        </Box>
+      </Flex>
       <ResponsiveContainer width="100%" height={400}>
         <LineChart data={chartData} layout="horizontal">
           <XAxis dataKey="timestamp" type="category" reversed tick={{ fontSize: 14 }} />
