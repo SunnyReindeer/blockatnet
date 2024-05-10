@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import moment from 'moment';
 import {
   LineChart,
   Line,
@@ -9,43 +10,113 @@ import {
   Legend,
   ResponsiveContainer,
   Text,
+  Cell,
 } from 'recharts';
-import moment from 'moment';
-import { Box, Heading, Button, Flex } from '@chakra-ui/react';
+import { Box, Heading, Button, Flex, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, useDisclosure } from '@chakra-ui/react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import _ from 'lodash';
+
+const TIME_RANGES = {
+  '7d': 7,
+  '30d': 30,
+  '90d': 90,
+  '180d': 180,
+  '1y': 365,
+};
 
 const CoinPriceChart = ({ coinDetails }) => {
   const [chartData, setChartData] = useState([]);
   const [chartType, setChartType] = useState('price');
   const [timeRange, setTimeRange] = useState('7d');
+  const [selectedDate, setSelectedDate] = useState(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   useEffect(() => {
-    let data = coinDetails.map((item) => ({
+    updateChartData(timeRange);
+  }, [coinDetails, timeRange]);
+
+  const filterDataByTimeRange = (data, range) => {
+    const endDate = new Date();
+    const startTime = endDate.getTime() - TIME_RANGES[range] * 24 * 60 * 60 * 1000;
+    return data.filter((item) => item.timestamp >= startTime);
+  };
+
+  const formatData = (data) => {
+    return data.map((item) => ({
       timestamp: moment(item.timestamp).format('MMM DD, YYYY'),
       price: parseFloat(item.price.toFixed(2)),
       volume: parseFloat(item.vol_spot_24h.toFixed(2)),
       marketCap: parseFloat(item.market_cap.toFixed(2)),
     }));
+  };
 
-    // Filter data based on the selected time range
-    const endDate = moment();
-    if (timeRange === '7d') {
-      data = data.filter(item => moment(item.timestamp).isAfter(endDate.clone().subtract(7, 'days')));
-    } else if (timeRange === '30d') {
-      data = data.filter(item => moment(item.timestamp).isAfter(endDate.clone().subtract(30, 'days')));
-    } else if (timeRange === '90d') {
-      data = data.filter(item => moment(item.timestamp).isAfter(endDate.clone().subtract(90, 'days')));
-    } else if (timeRange === '180d') {
-      data = data.filter(item => moment(item.timestamp).isAfter(endDate.clone().subtract(180, 'days')));
-    } else if (timeRange === '1y') {
-      data = data.filter(item => moment(item.timestamp).isAfter(endDate.clone().subtract(360, 'days')));
-    }
+  const updateChartData = (range) => {
+    const data = filterDataByTimeRange(coinDetails, range);
+    const formattedData = formatData(data);
+    setChartData(formattedData);
+    setTimeRange(range);
+    setSelectedDate(null);
+  };
 
-    setChartData(data);
-  }, [coinDetails, timeRange]);
+  const handleDateChange = (date) => {
+    const data = filterDataByMonth(coinDetails, date);
+    const formattedData = formatData(data);
+    setChartData(formattedData);
+    setSelectedDate(date);
+    onClose();
+  };
+
+  const filterDataByMonth = (data, date) => {
+    const month = moment(date).format('MMMM');
+    return data.filter((item) => moment(item.timestamp).format('MMMM') === month);
+  };
+
+  const renderLine = () => {
+    const starIcon = (
+      <Text
+        x={selectedDate ? 0 : undefined}
+        y={selectedDate ? 0 : undefined}
+        fontSize={14}
+        textAnchor="end"
+        verticalAnchor="middle"
+        dy={-5}
+        dx={-5}
+        fontWeight="bold"
+        fill="gold"
+      >
+        ★
+      </Text>
+    );
+    return (
+      <Line
+        yAxisId={chartType}
+        type="monotone"
+        dataKey={chartType}
+        stroke="#4299e1"
+        strokeWidth={2}
+        strokeDasharray={selectedDate ? '5 5' : '0 0'}
+        activeDot={{
+          fill: selectedDate ? '#4299e1' : 'none',
+          r: selectedDate ? 6 : 0,
+        }}
+      >
+        {chartData.map((entry, index) => (
+          <Cell
+            key={`cell-${index}`}
+            fill={selectedDate && moment(entry.timestamp).isSame(moment(selectedDate), 'day') ? 'gold' : undefined}
+          />
+        ))}
+        {starIcon}
+      </Line>
+    );
+  };
 
   return (
     <Box>
-      <Heading size="md" mb={4}>Coin Price Chart</Heading>
+      <Heading size="md" mb={4}>
+        Coin Price Chart
+      </Heading>
       <Flex justifyContent="space-between" mb={4}>
         <Box>
           <Button
@@ -73,52 +144,52 @@ const CoinPriceChart = ({ coinDetails }) => {
           </Button>
         </Box>
         <Box>
-          <Button
-            variant={timeRange === '7d' ? 'solid' : 'outline'}
-            colorScheme="blue"
-            mr={2}
-            onClick={() => setTimeRange('7d')}
-          >
-            7 Days
-          </Button>
-          <Button
-            variant={timeRange === '30d' ? 'solid' : 'outline'}
-            colorScheme="blue"
-            mr={2}
-            onClick={() => setTimeRange('30d')}
-          >
-            30 Days
-          </Button>
-          <Button
-            variant={timeRange === '90d' ? 'solid' : 'outline'}
-            colorScheme="blue"
-            mr={2}
-            onClick={() => setTimeRange('90d')}
-          >
-            90 Days
-          </Button>
-          <Button
-            variant={timeRange === '180d' ? 'solid' : 'outline'}
-            colorScheme="blue"
-            mr={2}
-            onClick={() => setTimeRange('180d')}
-          >
-            180 Days
-          </Button>
-          <Button
-            variant={timeRange === '1y' ? 'solid' : 'outline'}
-            colorScheme="blue"
-            onClick={() => setTimeRange('1y')}
-          >
-            1 Year
+          {Object.keys(TIME_RANGES).map((range) => (
+            <Button
+              key={range}
+              variant={timeRange === range ? 'solid' : 'outline'}
+              colorScheme="blue"
+              mr={2}
+              onClick={() => updateChartData(range)}
+            >
+              {range}
+            </Button>
+          ))}
+          <Button colorScheme="blue" onClick={onOpen}>
+            Select Date
           </Button>
         </Box>
       </Flex>
+
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Select a Date</ModalHeader>
+          <ModalBody>
+            <DatePicker
+              selected={selectedDate}
+              onChange={handleDateChange}
+              dateFormat="MMM d, yyyy"
+            />
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3} onClick={onClose}>
+              Close
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
       <ResponsiveContainer width="100%" height={400}>
         <LineChart data={chartData} layout="horizontal">
           <XAxis dataKey="timestamp" type="category" reversed tick={{ fontSize: 14 }} />
           {chartType === 'price' && (
-            <YAxis yAxisId="price" orientation="left" domain={['dataMin', 'dataMax']} tick={{ fontSize: 14, format: '.2f' }}>
+            <YAxis
+              yAxisId="price"
+              orientation="left"
+              domain={['dataMin', 'dataMax']}
+              tick={{ fontSize: 14, format: '.2f' }}
+            >
               <Text
                 fontSize="sm"
                 position="insideLeft"
@@ -130,7 +201,12 @@ const CoinPriceChart = ({ coinDetails }) => {
             </YAxis>
           )}
           {chartType === 'volume' && (
-            <YAxis yAxisId="volume" orientation="left" domain={['dataMin', 'dataMax']} tick={{ fontSize: 14, format: '.2f' }}>
+            <YAxis
+              yAxisId="volume"
+              orientation="left"
+              domain={['dataMin', 'dataMax']}
+              tick={{ fontSize: 14, format: '.2f' }}
+            >
               <Text
                 fontSize="sm"
                 position="insideLeft"
@@ -142,7 +218,12 @@ const CoinPriceChart = ({ coinDetails }) => {
             </YAxis>
           )}
           {chartType === 'marketCap' && (
-            <YAxis yAxisId="marketCap" orientation="left" domain={['dataMin', 'dataMax']} tick={{ fontSize: 14, format: '.2f' }}>
+            <YAxis
+              yAxisId="marketCap"
+              orientation="left"
+              domain={['dataMin', 'dataMax']}
+              tick={{ fontSize: 14, format: '.2f' }}
+            >
               <Text
                 fontSize="sm"
                 position="insideLeft"
@@ -164,15 +245,7 @@ const CoinPriceChart = ({ coinDetails }) => {
             iconType="circle"
             iconSize={10}
           />
-          {chartType === 'price' && (
-            <Line yAxisId="price" type="monotone" dataKey="price" stroke="#4299e1" strokeWidth={2} />
-          )}
-          {chartType === 'volume' && (
-            <Line yAxisId="volume" type="monotone" dataKey="volume" stroke="#38a169" strokeWidth={2} />
-          )}
-          {chartType === 'marketCap' && (
-            <Line yAxisId="marketCap" type="monotone" dataKey="marketCap" stroke="#6b46c1" strokeWidth={2} />
-          )}
+          {renderLine()}
         </LineChart>
       </ResponsiveContainer>
     </Box>
