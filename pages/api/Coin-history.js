@@ -9,9 +9,9 @@ export default async function handler(req, res) {
       'Content-Type': 'application/json'
     },
     params: {
-      interval: 'day',  // 或者 'hour' 或 'minute'，根據需要
-      length: 365,       // 想要返回的數據點的數量
-      vs_currency: 'usd' // 如果需要其他貨幣可以改變
+      interval: 'day',  
+      length: 365,       
+      vs_currency: 'usd' 
     }
   };
 

@@ -68,14 +68,13 @@ const Home = () => {
   const [highlightedTransactions, setHighlightedTransactions] = useState([]);
 
   
-
   useEffect(() => {
-    const savedHighlightedTransactions = Cookies.get('highlightedTransactions');
+    const savedHighlightedTransactions = Cookies.get(`highlightedTransactions-${data?.user?.address}`);
     if (savedHighlightedTransactions && savedHighlightedTransactions.trim() !== '') {
       setHighlightedTransactions(JSON.parse(savedHighlightedTransactions));
       setShowHighlightedTransactions(false); 
     }
-  }, []);
+  }, [data?.user?.address]);
   
   
   const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImVhMGViNmQ2LTY5YmEtNDI2OC04N2RmLWY4N2RjYjJkMDRhMyIsIm9yZ0lkIjoiMzgzMzE4IiwidXNlcklkIjoiMzkzODYwIiwidHlwZUlkIjoiOGVkMDgxYTgtM2MzZC00NmJhLWJmMWItMjY2MmY4ZTljNTBiIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MTA2OTY2NzQsImV4cCI6NDg2NjQ1NjY3NH0.2XSRCc86XZ_Tex_rHZJv3KIsmNEiXakclNUAGtBY4uA';

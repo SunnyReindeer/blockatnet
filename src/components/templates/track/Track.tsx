@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import { Input, Flex, Box, useToast, Text, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Button, InputGroup, InputRightElement, Switch, FormControl, FormLabel } from '@chakra-ui/react';
+import { Input, Flex, Box, useToast, Text, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Button, useClipboard, FormLabel } from '@chakra-ui/react';
 import * as d3 from 'd3';
 import { ethers } from 'ethers';
 
@@ -18,7 +18,17 @@ const Track = () => {
   const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0]);
   const [clickedNodeId, setClickedNodeId] = useState(null);
 
+  const { onCopy, hasCopied } = useClipboard(interactionDetails?.address || '');
 
+  const handleCopyAddress = () => {
+    onCopy();
+    toast({
+      title: 'Address Copied',
+      status: 'success',
+      duration: 2000,
+      isClosable: true,
+    });
+  };
 
   // Fetch transaction history based on address input or user's address
   useEffect(() => {
@@ -252,7 +262,7 @@ const Track = () => {
 
   return (
     <Flex>
-      <Box flex="1" p={4} overflowY="auto" maxW="600px">
+      <Box flex="1" p={4} overflowY="auto" maxW="800px">
         <Box mb={4}>
           <Box mb={4}>
             <Text fontSize="lg" fontWeight="bold" mb={2}>
@@ -288,7 +298,13 @@ const Track = () => {
         </Box>
         {interactionDetails && (
           <Box mb={4}>
-            <Text fontWeight="bold">Address: {interactionDetails.address}</Text>
+            
+            <Box mb={4} display="flex" alignItems="center">
+    <Text fontWeight="bold">Address: {interactionDetails.address}</Text>
+    <Button ml={2} onClick={handleCopyAddress}>
+      {hasCopied ? 'Copied' : 'Copy'}
+    </Button>
+    </Box>
             <Text>Interactions: {interactionDetails.interactionCount}</Text>
             <Text>Percentage of Total Interactions: {interactionDetails.interactionPercentage}%</Text>
             <Button onClick={() => setSelectedNode(prev => ({ ...prev, showDetails: !prev.showDetails }))}>
