@@ -21,7 +21,9 @@ import {
   Tr,
   Th,
   Tbody,
-  Td
+  Td,
+  Radio,
+  RadioGroup,
 } from '@chakra-ui/react';
 import Web3 from 'web3';
 import axios from 'axios';
@@ -29,7 +31,7 @@ import detectEthereumProvider from '@metamask/detect-provider';
 import emailjs from '@emailjs/browser';
 import app from './firebase';
 import { v4 as uuidv4 } from 'uuid';
-import { toast,ToastContainer } from 'react-toastify'; // Add react-toastify for in-app notifications
+import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const database = app.database();
@@ -46,6 +48,9 @@ interface ThresholdData {
 interface AlertData {
   crypto: string;
   threshold: number;
+  direction: 'above' | 'below';
+  walletAddress: string;
+  id: string;
 }
 
 const CRYPTOCURRENCIES = [
@@ -54,9 +59,9 @@ const CRYPTOCURRENCIES = [
   'litecoin',
   'bitcoin-cash',
   'cardano',
-  'stellar',
+  'tellar',
   'eos',
-  'monero',
+  'onero',
   'ripple',
   'tether',
   'binance-coin',
@@ -64,13 +69,13 @@ const CRYPTOCURRENCIES = [
   'dash',
   'iota',
   'tron',
-  'vechain',
+  'echain',
   'ethereum-classic',
   'qtum',
   'omisego',
   'augur',
   'golem',
-  'status',
+  'tatus',
   'digixdao',
 ];
 emailjs.init('wkbzNWH_xzboxGoGT');
@@ -84,9 +89,10 @@ const Alert = () => {
   const [activeAlerts, setActiveAlerts] = useState([]);
   const [selectedCrypto, setSelectedCrypto] = useState('');
   const [threshold, setThreshold] = useState('');
+  const [direction, setDirection] = useState<'above' | 'below'>('above');
   const [emailError, setEmailError] = useState('');
-  const [currentPrices, setCurrentPrices] = useState({}); // Add this line
-  const [alertCount, setAlertCount] = useState(0); // Add this line
+  const [currentPrices, setCurrentPrices] = useState({});
+  const [alertCount, setAlertCount] = useState(0);
 
   useEffect(() => {
     const connectToBlockchain = async () => {
@@ -96,20 +102,24 @@ const Alert = () => {
           const web3 = new Web3(provider);
           const accounts = await web3.eth.requestAccounts();
           const userAccount = accounts[0];
-
+  
           setWeb3(web3);
           setUserAccount(userAccount);
+  
+          // Store the user's wallet address in a cookie
+          document.cookie = `userAccount=${userAccount}; path=/`;
         } else {
           throw new Error('Please install MetaMask to use this dApp.');
         }
       } catch (error) {
         console.error(error);
-        toast.error('Error connecting to blockchain'); // Display error message using toast
+        toast.error('Error connecting to blockchain');
       }
     };
-
+  
     connectToBlockchain();
   }, []);
+
 
   useEffect(() => {
     const fetchPrices = async () => {
@@ -121,7 +131,7 @@ const Alert = () => {
           },
         });
         setPrices(response.data);
-        setCurrentPrices(response.data); // Update currentPrices here
+        setCurrentPrices(response.data);
         checkThresholds(response.data, thresholds);
       } catch (error) {
         console.error(error);
@@ -135,18 +145,22 @@ const Alert = () => {
     return () => clearInterval(interval);
   }, [thresholds]);
 
-  const createAlert = (crypto, threshold) => {
-    const newThresholdAlert = { crypto, threshold, id: uuidv4() }; // generate a unique ID
-    alertsRef.push(newThresholdAlert);
-  };
-
-
+  const createAlert = (crypto, threshold, direction, walletAddress) => {
+    const newThresholdAlert = { crypto, threshold, direction, walletAddress, id: uuidv4() };
+    alertsRef.child(walletAddress).push(newThresholdAlert).then((snapshot) => {
+      const newAlert = {...newThresholdAlert, key: snapshot.key };
+      setActiveAlerts((prevAlerts) => [...prevAlerts, newAlert]);
+    });
+  };  
   useEffect(() => {
     const unsubscribe = alertsRef.on('value', (snapshot) => {
       if (snapshot && snapshot.exists()) {
         const alerts = [];
         snapshot.forEach((childSnapshot) => {
-          alerts.push({...childSnapshot.val(), key: childSnapshot.key }); // add the key to each alert
+          const alert = childSnapshot.val();
+          if (alert.walletAddress === userAccount || (userAccount === null && getCookie('userAccount') === alert.walletAddress)) {
+            alerts.push({...alert, key: childSnapshot.key });
+          }
         });
         setActiveAlerts(alerts);
       } else {
@@ -154,47 +168,63 @@ const Alert = () => {
       }
     });
   
-    return () => unsubscribe();
-  }, []);
-  
-  const removeAlert = (alertToRemove) => {
-    alertsRef.child(alertToRemove.key).remove();
-    setAlertCount(alertCount - 1); // Decrement alertCount when an alert is removed
-  };
-
-  const handleThresholdChange = async () => {
-    if (selectedCrypto && threshold && isValidEmail(userEmail) && web3 && userAccount) {
-      if (activeAlerts.length < 3) { // Check if the user has already created 3 alerts
-        setThresholds((prevThresholds) => ({...prevThresholds, [selectedCrypto]: parseFloat(threshold) }));
-  
-        const newThresholdAlert: AlertData = { crypto: selectedCrypto, threshold: parseFloat(threshold) };
-        createAlert(selectedCrypto, parseFloat(threshold));
-        sendEmailOnThresholdChange(selectedCrypto, newThresholdAlert);
-        setAlertCount(activeAlerts.length + 1);
-        toast.success('Alert created successfully!', {
-          position: 'top-right',
-          autoClose: 5000,
-          hideProgressBar: true,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          style: notificationStyle, // Apply custom style
-        }); // Display success notification
-      } else {
-        toast.error('You have already created 3 alerts. Please remove some alerts to create new ones.', {
-          position: 'top-right',
-          autoClose: 5000,
-          hideProgressBar: true,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          style: notificationStyle, // Apply custom style
-        }); // Display error notification
+    // If the userAccount state is null, retrieve the user's wallet address from the cookie
+    if (userAccount === null) {
+      const userAccount = getCookie('userAccount');
+      if (userAccount) {
+        setUserAccount(userAccount);
       }
     }
+  
+    return () => unsubscribe();
+  }, [userAccount, web3]); // Add web3 to the dependency array
+  
+  // Helper function to retrieve the user's wallet address from the cookie
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
+
+  const removeAlert = (alertToRemove) => {
+    alertsRef.child(userAccount).child(alertToRemove.key).remove();
+    setActiveAlerts(activeAlerts.filter((alert) => alert.id !== alertToRemove.id));
+    setAlertCount(activeAlerts.length - 1);
   };
+
+const handleThresholdChange = async () => {
+  if (selectedCrypto && threshold && isValidEmail(userEmail) && web3 && userAccount) {
+    if (activeAlerts.length < 3) {
+      setThresholds((prevThresholds) => ({...prevThresholds, [selectedCrypto]: parseFloat(threshold) }));
+
+      const newThresholdAlert: AlertData = { crypto: selectedCrypto, threshold: parseFloat(threshold), direction, walletAddress: userAccount };
+      createAlert(selectedCrypto, parseFloat(threshold), direction, userAccount);
+      sendEmailOnThresholdChange(selectedCrypto, newThresholdAlert);
+      setAlertCount(activeAlerts.length + 1);
+      toast.success(`Alert created successfully! You will receive notifications when ${selectedCrypto.toUpperCase()} ${direction === 'above' ? 'goes above' : 'goes below'} $${threshold}`, {
+        position: 'top-right',
+        autoClose: 5000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        style: notificationStyle,
+      });
+    } else {
+      toast.error('You have already created 3 alerts. Please remove some alerts to create new ones.', {
+        position: 'top-right',
+        autoClose: 5000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        style: notificationStyle,
+      });
+    }
+  }
+};
 
   const handleUserEmailChange = (e) => {
     setUserEmail(e.target.value);
@@ -208,34 +238,67 @@ const Alert = () => {
   const checkThresholds = (prices, thresholds) => {
     CRYPTOCURRENCIES.forEach((crypto) => {
       const currentPrice = prices[crypto].usd;
-      if (currentPrice >= thresholds[crypto]) {
-        toast.success(`${crypto.toUpperCase()} price has reached $${thresholds[crypto]}`);
-        sendEmailOnThresholdReach(crypto, currentPrice, thresholds[crypto]);
+      if (currentPrice >= thresholds[crypto] && thresholds[crypto] !== undefined && direction === 'above') {
+        toast.success(`${crypto.toUpperCase()} price has reached $${thresholds[crypto]} above the threshold.`, {
+          position: 'top-right',
+          autoClose: 5000,
+          hideProgressBar: true,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          style: notificationStyle,
+        });
+        sendEmailOnThresholdReach(crypto, currentPrice, thresholds[crypto], 'above');
+  
+        // Remove the alert from Firebase and the user interface
+        const alertToRemove = activeAlerts.find((alert) => alert.crypto === crypto && alert.threshold === thresholds[crypto]);
+        if (alertToRemove) {
+          removeAlert(alertToRemove);
+        }
+      } else if (currentPrice <= thresholds[crypto] && thresholds[crypto] !== undefined && direction === 'below') {
+        toast.success(`${crypto.toUpperCase()} price has reached $${thresholds[crypto]} below the threshold.`, {
+          position: 'top-right',
+          autoClose: 5000,
+          hideProgressBar: true,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          style: notificationStyle,
+        });
+        sendEmailOnThresholdReach(crypto, currentPrice, thresholds[crypto], 'below');
+  
+        // Remove the alert from Firebase and the user interface
+        const alertToRemove = activeAlerts.find((alert) => alert.crypto === crypto && alert.threshold === thresholds[crypto]);
+        if (alertToRemove) {
+          removeAlert(alertToRemove);
+        }
       }
     });
   };
-
   const sendEmailOnThresholdChange = (crypto, thresholdAlert) => {
     const emailTemplateParams = {
-      to_email: userEmail, // Set to_email to the user's email address
+      to_email: userEmail,
       to_name: userEmail,
-      from_email: 'cheunhhoyin@gmail.com', // Set from_email to a valid sender email address
-      message: `Alert created successfully! You will receive notifications when ${crypto} reaches $${thresholdAlert.threshold}`,
+      from_email: 'cheunhhoyin@gmail.com',
+      message: `Alert created successfully! You will receive notifications when ${crypto} reaches $${thresholdAlert.threshold} ${thresholdAlert.direction === 'above' ? 'above' : 'below'} the threshold.`,
     };
-    
+
     sendEmail(emailTemplateParams);
   };
-  
-  const sendEmailOnThresholdReach = (crypto, currentPrice, threshold) => {
+
+  const sendEmailOnThresholdReach = (crypto, currentPrice, threshold, direction) => {
     const emailTemplateParams = {
-      to_email: userEmail, // Set to_email to the user's email address
+      to_email: userEmail,
       to_name: userEmail,
-      from_email: 'cheunhoyin@gmail.com', // Set from_email to a valid sender email address
+      from_email: 'cheunhhoyin@gmail.com',
       crypto,
       currentPrice,
       threshold,
+      direction,
     };
-    
+
     sendEmail(emailTemplateParams);
   };
 
@@ -251,88 +314,141 @@ const Alert = () => {
   };
 
   const notificationStyle = {
-    background: '#333',
-    color: '#fff',
-    fontFamily: 'Arial, sans-serif',
     fontSize: '16px',
-    padding: '16px',
-    borderRadius: '8px',
-    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+    fontWeight: 'bold',
+    color: '#fff',
+    backgroundColor: '#333',
+    padding: '10px 20px',
+    borderRadius: '5px',
+    marginBottom: '10px',
   };
 
-  const notificationCloseButtonStyle = {
-    color: '#fff',
-    fontSize: '20px',
-    fontWeight: 'bold',
-  };
+
+
+  useEffect(() => {
+    const fetchActiveAlerts = async () => {
+      if (userAccount) {
+        const alertsRef = database.ref('activeAlerts').child(userAccount);
+        alertsRef.on('value', (snapshot) => {
+          if (snapshot && snapshot.exists()) {
+            const alerts = [];
+            snapshot.forEach((childSnapshot) => {
+              const alert = childSnapshot.val();
+              alerts.push({ ...alert, key: childSnapshot.key });
+            });
+            setActiveAlerts(alerts);
+          } else {
+            setActiveAlerts([]);
+          }
+        });
+      }
+    };
   
+    fetchActiveAlerts();
+  }, [userAccount]);
+
+
+
+
   return (
     <ChakraProvider>
-      <Box m={5}>
-        <Heading as="h1" size="xl">
-          Price Alert System
+      <Box p={4}>
+        <Heading as="h1" size="xl" mb={4}>
+          Crypto Alert System
         </Heading>
         <Grid templateColumns="repeat(2, 1fr)" gap={6}>
-          {/* Box 1:Create Alert */}
+        <GridItem>
+  <Flex direction="column">
+    <Heading as="h3" size="md" mb={2}>
+      Select Cryptocurrency
+    </Heading>
+    <Select
+      placeholder="Select a cryptocurrency"
+      value={selectedCrypto}
+      onChange={(e) => setSelectedCrypto(e.target.value)}
+    >
+      {Object.entries(currentPrices).map(([crypto, price]) => (
+        <option key={crypto} value={crypto}>
+          {crypto} - ${price.usd}
+        </option>
+      ))}
+    </Select>
+  </Flex>
+</GridItem>
           <GridItem>
-            <Box p={4} bg="gray.100" borderRadius="md" boxShadow="md">
-              <Heading as="h2" size="lg">
-                Create Alert
+            <Flex direction="column">
+              <Heading as="h3" size="md" mb={2}>
+                Set Threshold
               </Heading>
-              <Grid templateColumns="repeat(2, 1fr)" gap={4}>
-                <GridItem>
-                  <Select placeholder="Select Crypto" onChange={(e) => setSelectedCrypto(e.target.value)}>
-                    {Object.entries(currentPrices).map(([crypto, { usd }]) => (
-                      <option key={crypto} value={crypto}>
-                        {crypto.toUpperCase()} - ${usd.toFixed(2)}
-                      </option>
-                    ))}
-                  </Select>
-                </GridItem>
-                <GridItem>
-                  <InputGroup>
-                    <InputLeftAddon children="$" />
-                    <Input placeholder="Threshold Price" value={threshold} onChange={(e) => setThreshold(e.target.value)} />
-                  </InputGroup>
-                </GridItem>
-              </Grid>
-              <Input placeholder="Enter Email" type="email" value={userEmail} onChange={handleUserEmailChange} />
-              {emailError && <Text color="red.500">{emailError}</Text>}
-              <Button colorScheme="blue" onClick={handleThresholdChange} mt={4}>
-                Create Alert
-              </Button>
-            </Box>
+              <Input
+                type="number"
+                placeholder="Enter threshold"
+                value={threshold}
+                onChange={(e) => setThreshold(e.target.value)}
+              />
+            </Flex>
           </GridItem>
-          {/* Box 2: Active Alerts */}
           <GridItem>
-            <Box p={4} bg="gray.100" borderRadius="md" boxShadow="md">
-              <Heading as="h2" size="lg">
-                Active Alerts
+            <Flex direction="column">
+              <Heading as="h3" size="md"mb={2}>
+                Price Direction
               </Heading>
-              <Table variant="simple">
-                <Thead>
-                  <Tr>
-                    <Th>Crypto</Th>
-                    <Th>Threshold</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {activeAlerts.map((alert) => (
-                    <Tr key={alert.id}>
-                      <Td>{alert.crypto.toUpperCase()}</Td>
-                      <Td>${alert.threshold}</Td>
-                      <Td>
-                        <CloseButton onClick={() => removeAlert(alert)} />
-                      </Td>
-                    </Tr>
-                  ))}
-                </Tbody>
-              </Table>
-            </Box>
+              <RadioGroup value={direction} onChange={setDirection}>
+                <Radio value="above">Above</Radio>
+                <Radio value="below">Below</Radio>
+              </RadioGroup>
+            </Flex>
+          </GridItem>
+          <GridItem>
+            <Flex direction="column">
+              <Heading as="h3" size="md" mb={2}>
+                Enter Email
+              </Heading>
+              <Input
+                type="email"
+                placeholder="Enter your email"
+                value={userEmail}
+                onChange={handleUserEmailChange}
+              />
+              {emailError && <Text color="red.500">{emailError}</Text>}
+            </Flex>
           </GridItem>
         </Grid>
-        <ToastContainer />
+        <Button
+          mt={4}
+          colorScheme="teal"
+          isDisabled={!selectedCrypto || !threshold || !userEmail || !web3 || !userAccount}
+          onClick={handleThresholdChange}
+        >
+          Create Alert
+        </Button>
+        <Heading as="h2" size="lg" mt={6}>
+          Active Alerts
+        </Heading>
+        <Table variant="simple" mt={4}>
+          <Thead>
+            <Tr>
+              <Th>Crypto</Th>
+              <Th>Threshold</Th>
+             <Th>Direction</Th>
+              <Th>Remove</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {activeAlerts.map((alert) => (
+              <Tr key={alert.id}>
+                <Td>{alert.crypto}</Td>
+                <Td>${alert.threshold}</Td>
+                <Td>{alert.direction === 'above' ? 'Above' : 'Below'}</Td>
+                <Td>
+                  <CloseButton onClick={() => removeAlert(alert)} />
+                </Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
       </Box>
+      <ToastContainer />
     </ChakraProvider>
   );
 };
