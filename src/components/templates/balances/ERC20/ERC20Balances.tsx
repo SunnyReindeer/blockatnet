@@ -35,8 +35,7 @@ const ERC20Balances = () => {
   const formatNumber = (number) => {
     return new Intl.NumberFormat('en-US', { maximumFractionDigits: 6, notation: "compact" }).format(number);
   };
-  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjUzZTI3YzZjLTE1YTUtNGE0My05NTVlLTYzODg0Nzk0MTNjNyIsIm9yZ0lkIjoiMzgzMzQxIiwidXNlcklkIjoiMzkzODg0IiwidHlwZUlkIjoiNmNkZDQxNGEtNGQ1NC00YTFiLWJjYmUtMTAzZTgwMTM1ZDM1IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MTA3MDY4NTQsImV4cCI6NDg2NjQ2Njg1NH0.Jd7LRPGqGDDl3e5OULPEAx9b7vS7xCcddVToICpYgvQ';
-
+  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImVhMGViNmQ2LTY5YmEtNDI2OC04N2RmLWY4N2RjYjJkMDRhMyIsIm9yZ0lkIjoiMzgzMzE4IiwidXNlcklkIjoiMzkzODYwIiwidHlwZUlkIjoiOGVkMDgxYTgtM2MzZC00NmJhLWJmMWItMjY2MmY4ZTljNTBiIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MTA2OTY2NzQsImV4cCI6NDg2NjQ1NjY3NH0.2XSRCc86XZ_Tex_rHZJv3KIsmNEiXakclNUAGtBY4uA';
   useEffect(() => {
     const fetchTokenPrices = async () => {
       const prices = {};

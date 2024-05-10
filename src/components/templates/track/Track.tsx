@@ -49,8 +49,8 @@ const Track = () => {
   };
 
 
-  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjI5N2Y2Mjc1LWVhZDQtNDNiOC04MmU2LWQyOTc2NDFkODdlYiIsIm9yZ0lkIjoiMzg0NjAyIiwidXNlcklkIjoiMzk1MTc2IiwidHlwZUlkIjoiZmZhOWY5NjAtZjZjMy00Y2JhLThhYTgtNWNhYzNkMTFkMGJmIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MTEzNTQ1MTksImV4cCI6NDg2NzExNDUxOX0.h9-OeF5VKg4jPHXylfBaXphHk_Hm1ljzxYEDPtlx_BU';
- 
+  const MORALIS_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImVhMGViNmQ2LTY5YmEtNDI2OC04N2RmLWY4N2RjYjJkMDRhMyIsIm9yZ0lkIjoiMzgzMzE4IiwidXNlcklkIjoiMzkzODYwIiwidHlwZUlkIjoiOGVkMDgxYTgtM2MzZC00NmJhLWJmMWItMjY2MmY4ZTljNTBiIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3MTA2OTY2NzQsImV4cCI6NDg2NjQ1NjY3NH0.2XSRCc86XZ_Tex_rHZJv3KIsmNEiXakclNUAGtBY4uA';
+  
   // Fetch transaction history from Moralis API
   const fetchTransactionHistory = async (address) => {
     const url = `https://deep-index.moralis.io/api/v2.2/wallets/${address}/history?chain=eth&from_date=${fromDate}&to_date=${toDate}&include_internal_transactions=true&nft_metadata=true&order=DESC`;
@@ -160,7 +160,7 @@ const Track = () => {
       .data(nodes)
       .enter().append("circle")
       .attr("r", 5)
-      .attr("fill", d => d.id === clickedNodeId ? "green" : "blue")
+      .attr("fill", d => d.id === clickedNodeId ? "orange" : "blue")
       .on("click", (event, d) => handleNodeClick(event, d))
       .call(d3.drag()
         .on("start", (event, d) => dragstarted(event, d, simulation))
@@ -211,7 +211,7 @@ const Track = () => {
 
     // Highlight the clicked node
     d3.select(event.currentTarget)
-      .attr('fill', 'green');  // Set the clicked node to green
+      .attr('fill', 'orange');  // Set the clicked node to orange
 
     const relatedTransactions = transactions.filter(tx =>
       tx.from_address === node.id || tx.to_address === node.id
