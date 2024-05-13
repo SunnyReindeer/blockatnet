@@ -78,7 +78,7 @@ const CRYPTOCURRENCIES = [
   'tatus',
   'digixdao',
 ];
-emailjs.init('wkbzNWH_xzboxGoGT');
+emailjs.init('ph1YZcknw3GjXxGBN');
 
 const Alert = () => {
   const [web3, setWeb3] = useState(null);
@@ -183,7 +183,7 @@ const Alert = () => {
   
         // If the user's wallet address is already associated with alerts, retrieve them
         const userAlertsRef = database.ref('activeAlerts').child(userAccount);
-        userAlertsRef.on('value', (snapshot) => {
+        userAlertsRef.once('value', (snapshot) => {
           if (snapshot && snapshot.exists()) {
             const alerts = [];
             snapshot.forEach((childSnapshot) => {
@@ -330,7 +330,7 @@ const handleThresholdChange = async () => {
   };
   
   const sendEmail = (emailTemplateParams) => {
-    emailjs.send('service_lg0xoja', 'template_nn5xv1r', emailTemplateParams)
+    emailjs.send('service_2x8ry01', 'template_6qz9jlq', emailTemplateParams)
      .then(() => {
         console.log('Email sent successfully!');
       })
