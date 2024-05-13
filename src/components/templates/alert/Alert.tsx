@@ -175,9 +175,9 @@ const Alert = () => {
       }
     });
   
-    // If the userAccount state is null, retrieve the user's wallet address from the cookie
+    // If the userAccount state is null, retrieve the user's wallet address from local storage
     if (userAccount === null) {
-      const userAccount = getCookie('userAccount');
+      const userAccount = localStorage.getItem('userAccount');
       if (userAccount) {
         setUserAccount(userAccount);
   
@@ -194,6 +194,15 @@ const Alert = () => {
           }
         });
       }
+    }
+  
+    // Save the active alerts to localStorage
+    localStorage.setItem('activeAlerts', JSON.stringify(activeAlerts));
+  
+    // Retrieve the active alerts from localStorage
+    const storedActiveAlerts = localStorage.getItem('activeAlerts');
+    if (storedActiveAlerts) {
+      setActiveAlerts(JSON.parse(storedActiveAlerts));
     }
   
     return () => unsubscribe();
@@ -350,8 +359,6 @@ const handleThresholdChange = async () => {
     marginBottom: '10px',
   };
 
-
-
   useEffect(() => {
     const fetchActiveAlerts = async () => {
       if (userAccount) {
@@ -364,28 +371,17 @@ const handleThresholdChange = async () => {
               alerts.push({...alert, key: childSnapshot.key });
             });
             setActiveAlerts(alerts);
+            localStorage.setItem('activeAlerts', JSON.stringify(alerts));
           } else {
             setActiveAlerts([]);
+            localStorage.setItem('activeAlerts', JSON.stringify([]));
           }
         });
       } else {
-        const userAccount = getCookie('userAccount');
-        if (userAccount) {
-          setUserAccount(userAccount);
+        const storedActiveAlerts = localStorage.getItem('activeAlerts');
+        if (storedActiveAlerts) {
+          setActiveAlerts(JSON.parse(storedActiveAlerts));
         }
-        const alertsRef = database.ref('activeAlerts').child(userAccount);
-        alertsRef.on('value', (snapshot) => {
-          if (snapshot && snapshot.exists()) {
-            const alerts = [];
-            snapshot.forEach((childSnapshot) => {
-              const alert = childSnapshot.val();
-              alerts.push({...alert, key: childSnapshot.key });
-            });
-            setActiveAlerts(alerts);
-          } else {
-            setActiveAlerts([]);
-          }
-        });
       }
     };
   
@@ -400,8 +396,7 @@ const handleThresholdChange = async () => {
         const accounts = await web3.eth.requestAccounts();
         const userAccount = accounts[0];
   
-        // Store the user's wallet address in local storage
-        localStorage.setItem('userAccount', userAccount);
+        console.log('handleWalletConnect called with userAccount:', userAccount);
   
         setWeb3(web3);
         setUserAccount(userAccount);
@@ -414,6 +409,16 @@ const handleThresholdChange = async () => {
     }
   };
 
+
+  useEffect(() => {
+    const storedActiveAlerts = localStorage.getItem('activeAlerts');
+    if (storedActiveAlerts) {
+      setActiveAlerts(JSON.parse(storedActiveAlerts));
+    }
+  }, []);
+
+
+  
 
   return (
     <ChakraProvider>
