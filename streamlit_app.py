@@ -16,4 +16,4 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # 調整 iframe 的寬高參數，嘗試更大的寬度
-st.components.v1.iframe("http://localhost:3000", width=5000, height=1080)
+st.components.v1.iframe("http://localhost:3000", width=1920, height=1080)
